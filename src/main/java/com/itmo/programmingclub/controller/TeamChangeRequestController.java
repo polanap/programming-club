@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.entity.TeamChangeRequest;
+import com.itmo.programmingclub.model.entity.TeamChangeRequest;
 import com.itmo.programmingclub.service.TeamChangeRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

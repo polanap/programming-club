@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.entity;
+package com.itmo.programmingclub.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,12 +9,12 @@ import lombok.Setter;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "elder_change_request")
+@Table(name = "team_change_request")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ElderChangeRequest {
+public class TeamChangeRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -22,10 +22,6 @@ public class ElderChangeRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", nullable = false)
     private UserRole student;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "new_elder_id", nullable = false)
-    private UserRole newElder;
 
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;

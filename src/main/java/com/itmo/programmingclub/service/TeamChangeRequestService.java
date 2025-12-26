@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.entity.TeamChangeRequest;
+import com.itmo.programmingclub.model.entity.TeamChangeRequest;
 import com.itmo.programmingclub.repository.TeamChangeRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -5,10 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.itmo.programmingclub.dto.ErrorMessageResponse;
+
+import com.itmo.programmingclub.model.dto.ErrorMessageResponse;
 
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -50,6 +52,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessageResponse> handleOtherException(RuntimeException e) {
         
         return ResponseEntity.internalServerError().body(createAndLogError("Internal Server Error", e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleUsernameNotFoundException(UsernameNotFoundException e) {
+        return ResponseEntity.status(401).body(createAndLogError("Bad credentials", e));
     }
 
     private ErrorMessageResponse createAndLogError(String message, Throwable e) {

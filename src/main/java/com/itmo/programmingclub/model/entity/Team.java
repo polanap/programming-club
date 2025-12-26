@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.entity;
+package com.itmo.programmingclub.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

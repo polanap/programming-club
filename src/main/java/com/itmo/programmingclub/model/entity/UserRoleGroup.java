@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.entity;
+package com.itmo.programmingclub.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,14 +10,14 @@ import lombok.Setter;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "user_team")
+@Table(name = "user_role_group")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserTeam {
+public class UserRoleGroup {
     @EmbeddedId
-    private UserTeamId id;
+    private UserRoleGroupId id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userRoleId")
@@ -25,9 +25,9 @@ public class UserTeam {
     private UserRole userRole;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("teamId")
-    @JoinColumn(name = "team_id", nullable = false)
-    private Team team;
+    @MapsId("groupId")
+    @JoinColumn(name = "group_id", nullable = false)
+    private Group group;
 
     @Embeddable
     @Getter
@@ -35,11 +35,11 @@ public class UserTeam {
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode
-    public static class UserTeamId implements Serializable {
+    public static class UserRoleGroupId implements Serializable {
         @Column(name = "user_role_id")
         private Integer userRoleId;
 
-        @Column(name = "team_id")
-        private Integer teamId;
+        @Column(name = "group_id")
+        private Integer groupId;
     }
 }

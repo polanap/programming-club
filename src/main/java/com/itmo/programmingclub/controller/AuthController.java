@@ -1,8 +1,8 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.dto.AuthRequest;
-import com.itmo.programmingclub.dto.AuthResponse;
-import com.itmo.programmingclub.dto.RegisterRequest;
+import com.itmo.programmingclub.model.dto.AuthRequest;
+import com.itmo.programmingclub.model.dto.AuthResponse;
+import com.itmo.programmingclub.model.dto.RegisterRequest;
 import com.itmo.programmingclub.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

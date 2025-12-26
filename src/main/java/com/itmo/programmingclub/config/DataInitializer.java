@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.config;
 
-import com.itmo.programmingclub.entity.Role;
+import com.itmo.programmingclub.model.entity.Role;
 import com.itmo.programmingclub.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

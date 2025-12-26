@@ -1,9 +1,9 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.dto.AuthRequest;
-import com.itmo.programmingclub.dto.AuthResponse;
-import com.itmo.programmingclub.dto.RegisterRequest;
-import com.itmo.programmingclub.entity.User;
+import com.itmo.programmingclub.model.dto.AuthRequest;
+import com.itmo.programmingclub.model.dto.AuthResponse;
+import com.itmo.programmingclub.model.dto.RegisterRequest;
+import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.repository.UserRepository;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.security.JwtTokenProvider;

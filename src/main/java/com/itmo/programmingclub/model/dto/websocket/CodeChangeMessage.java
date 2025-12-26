@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.dto.websocket;
+package com.itmo.programmingclub.model.dto.websocket;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

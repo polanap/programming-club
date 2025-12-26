@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.entity.ElderChangeRequest;
+import com.itmo.programmingclub.model.entity.ElderChangeRequest;
 import com.itmo.programmingclub.repository.ElderChangeRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

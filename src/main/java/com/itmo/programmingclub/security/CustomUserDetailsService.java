@@ -1,7 +1,7 @@
 package com.itmo.programmingclub.security;
 
-import com.itmo.programmingclub.entity.User;
-import com.itmo.programmingclub.entity.UserRole;
+import com.itmo.programmingclub.model.entity.User;
+import com.itmo.programmingclub.model.entity.UserRole;
 import com.itmo.programmingclub.repository.UserRepository;
 import com.itmo.programmingclub.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;

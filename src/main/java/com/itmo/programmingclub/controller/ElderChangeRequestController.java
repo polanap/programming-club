@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.entity.ElderChangeRequest;
+import com.itmo.programmingclub.model.entity.ElderChangeRequest;
 import com.itmo.programmingclub.service.ElderChangeRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

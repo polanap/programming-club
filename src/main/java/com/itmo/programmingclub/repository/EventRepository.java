@@ -1,8 +1,9 @@
 package com.itmo.programmingclub.repository;
 
-import com.itmo.programmingclub.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.itmo.programmingclub.model.entity.Event;
 
 import java.time.OffsetDateTime;
 import java.util.List;

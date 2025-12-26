@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.entity.TransferRequest;
+import com.itmo.programmingclub.model.entity.TransferRequest;
 import com.itmo.programmingclub.repository.TransferRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

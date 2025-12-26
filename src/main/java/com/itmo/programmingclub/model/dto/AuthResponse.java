@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.dto;
+package com.itmo.programmingclub.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
