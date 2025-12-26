@@ -1,13 +1,13 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.dto.websocket.CodeChangeMessage;
-import com.itmo.programmingclub.dto.websocket.CodeSyncMessage;
-import com.itmo.programmingclub.dto.websocket.CursorPositionMessage;
-import com.itmo.programmingclub.dto.websocket.LineLockMessage;
+import com.itmo.programmingclub.model.dto.websocket.CodeChangeMessage;
+import com.itmo.programmingclub.model.dto.websocket.CodeSyncMessage;
+import com.itmo.programmingclub.model.dto.websocket.CursorPositionMessage;
+import com.itmo.programmingclub.model.dto.websocket.LineLockMessage;
+import com.itmo.programmingclub.model.entity.Team;
+import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.security.SecurityUtils;
-import com.itmo.programmingclub.entity.Team;
-import com.itmo.programmingclub.entity.User;
 import com.itmo.programmingclub.service.CodeEditorService;
 import com.itmo.programmingclub.service.TeamService;
 import lombok.RequiredArgsConstructor;

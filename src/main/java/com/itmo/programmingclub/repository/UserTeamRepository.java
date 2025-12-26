@@ -1,8 +1,9 @@
 package com.itmo.programmingclub.repository;
 
-import com.itmo.programmingclub.entity.UserTeam;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.itmo.programmingclub.model.entity.UserTeam;
 
 import java.util.List;
 

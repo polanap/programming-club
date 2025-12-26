@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.entity;
+package com.itmo.programmingclub.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.Setter;
 import java.util.Set;
 
 @Entity
-@Table(name = "role")
+@Table(name = "app_role")
 @Getter
 @Setter
 @NoArgsConstructor

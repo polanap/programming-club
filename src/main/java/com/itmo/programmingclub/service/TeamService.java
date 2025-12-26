@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.entity.Team;
+import com.itmo.programmingclub.model.entity.Team;
 import com.itmo.programmingclub.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

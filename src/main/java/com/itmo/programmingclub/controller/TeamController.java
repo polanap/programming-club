@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.entity.Team;
+import com.itmo.programmingclub.model.entity.Team;
 import com.itmo.programmingclub.service.TeamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

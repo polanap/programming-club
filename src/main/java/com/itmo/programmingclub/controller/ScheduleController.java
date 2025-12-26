@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.entity.Schedule;
+import com.itmo.programmingclub.model.entity.Schedule;
 import com.itmo.programmingclub.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

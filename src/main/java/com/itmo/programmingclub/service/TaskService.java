@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.entity.Task;
+import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

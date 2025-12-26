@@ -1,4 +1,4 @@
-package com.itmo.programmingclub.dto.websocket;
+package com.itmo.programmingclub.model.dto.websocket;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CodeSyncMessage {
+public class CursorPositionMessage {
     private Integer teamId;
-    private String code; // Full code content
+    private Integer lineNumber;
+    private Integer position;
     private String userId;
+    private String userRole;
 }
 

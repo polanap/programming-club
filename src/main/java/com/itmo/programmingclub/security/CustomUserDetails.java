@@ -1,12 +1,13 @@
 package com.itmo.programmingclub.security;
 
-import com.itmo.programmingclub.entity.User;
-import com.itmo.programmingclub.entity.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.itmo.programmingclub.model.entity.User;
+import com.itmo.programmingclub.model.entity.UserRole;
 
 import java.util.Collection;
 import java.util.stream.Collectors;

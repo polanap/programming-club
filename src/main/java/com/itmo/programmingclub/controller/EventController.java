@@ -1,6 +1,6 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.entity.Event;
+import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;

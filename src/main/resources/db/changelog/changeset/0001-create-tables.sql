@@ -1,10 +1,10 @@
-CREATE TABLE role
+CREATE TABLE app_role
 (
     id   SERIAL PRIMARY KEY,
     role VARCHAR(50) NOT NULL CHECK (role in ('STUDENT', 'CURATOR', 'MANAGER'))
 );
 
-CREATE TABLE "user"
+CREATE TABLE app_user
 (
     id                SERIAL PRIMARY KEY,
     registration_date TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -19,11 +19,11 @@ CREATE TABLE "user"
 CREATE TABLE user_role
 (
     id      SERIAL PRIMARY KEY,
-    role_id INTEGER NOT NULL REFERENCES role (id) ON DELETE CASCADE,
-    user_id INTEGER NOT NULL REFERENCES "user" (id) ON DELETE CASCADE
+    role_id INTEGER NOT NULL REFERENCES app_role (id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES app_user (id) ON DELETE CASCADE
 );
 
-CREATE TABLE "group"
+CREATE TABLE app_group
 (
     id         SERIAL PRIMARY KEY,
     start_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -32,7 +32,7 @@ CREATE TABLE "group"
 CREATE TABLE user_role_group
 (
     user_role_id INTEGER NOT NULL REFERENCES user_role (id) ON DELETE CASCADE,
-    group_id     INTEGER NOT NULL REFERENCES "group" (id) ON DELETE CASCADE,
+    group_id     INTEGER NOT NULL REFERENCES app_group (id) ON DELETE CASCADE,
     PRIMARY KEY (user_role_id, group_id)
 );
 
@@ -42,10 +42,10 @@ CREATE TABLE schedule
     class_start_time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     class_end_time   TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '2 hour'),
     is_relevant      BOOLEAN     NOT NULL DEFAULT true,
-    group_id         INTEGER     NOT NULL REFERENCES "group" (id) ON DELETE CASCADE
+    group_id         INTEGER     NOT NULL REFERENCES app_group (id) ON DELETE CASCADE
 );
 
-CREATE TABLE class
+CREATE TABLE app_class
 (
     id          SERIAL PRIMARY KEY,
     schedule_id INTEGER NOT NULL REFERENCES schedule (id) ON DELETE CASCADE
@@ -55,19 +55,19 @@ CREATE TABLE class
 CREATE TABLE team
 (
     id       SERIAL PRIMARY KEY,
-    class_id INTEGER NOT NULL REFERENCES class (id) ON DELETE CASCADE,
-    elder_id INTEGER NOT NULL REFERENCES "user" (id)
+    class_id INTEGER NOT NULL REFERENCES app_class (id) ON DELETE CASCADE,
+    elder_id INTEGER NOT NULL REFERENCES app_user (id)
 );
 
 CREATE TABLE task
 (
     id        SERIAL PRIMARY KEY,
     condition TEXT    NOT NULL CHECK (LENGTH(condition) > 0),
-    author_id INTEGER NOT NULL REFERENCES "user" (id),
+    author_id INTEGER NOT NULL REFERENCES app_user (id),
     is_open   BOOLEAN NOT NULL DEFAULT true
 );
 
-CREATE TABLE test
+CREATE TABLE app_test
 (
     id      SERIAL PRIMARY KEY,
     task_id INTEGER NOT NULL REFERENCES task (id),
@@ -84,7 +84,7 @@ CREATE TABLE submission
     team_id INTEGER     NOT NULL REFERENCES team (id) ON DELETE CASCADE
 );
 
-CREATE TABLE event
+CREATE TABLE app_event
 (
     id            SERIAL PRIMARY KEY,
     time          TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -96,7 +96,7 @@ CREATE TABLE event
     team_id       INTEGER REFERENCES team (id) ON DELETE CASCADE,
     user_role_id  INTEGER REFERENCES user_role (id) ON DELETE CASCADE,
     submission_id INTEGER REFERENCES submission (id) ON DELETE CASCADE,
-    class_id      INTEGER REFERENCES class (id) ON DELETE CASCADE,
+    class_id      INTEGER REFERENCES app_class (id) ON DELETE CASCADE,
     task_id       INTEGER REFERENCES task (id) ON DELETE CASCADE
 );
 
@@ -148,7 +148,7 @@ CREATE TABLE avaliable_group
 (
     id         SERIAL PRIMARY KEY,
     request_id INTEGER NOT NULL REFERENCES transfer_request (id) ON DELETE CASCADE,
-    group_id   INTEGER NOT NULL REFERENCES "group" (id) ON DELETE CASCADE,
+    group_id   INTEGER NOT NULL REFERENCES app_group (id) ON DELETE CASCADE,
     approved   BOOL DEFAULT FALSE
 
 );
