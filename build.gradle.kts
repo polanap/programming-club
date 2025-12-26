@@ -49,3 +49,15 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+tasks.register<Exec>("sshPortForward") {
+    commandLine("ssh", "-L", "54321:localhost:5432", "helios")
+    
+    doFirst {
+        println("Starting SSH port forwarding...")
+    }
+
+    doLast {
+        println("Port forwarding started.")
+    }
+}

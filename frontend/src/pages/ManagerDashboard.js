@@ -56,6 +56,11 @@ const ManagerDashboard = () => {
             <h3>Заявки на перевод</h3>
             <p>Новых заявок: {transferRequests.filter(r => r.status === 'NEW').length}</p>
           </div>
+          
+          <div className="dashboard-card" onClick={() => navigate('/manager/activation')}>
+            <h3>Активация менеджеров</h3>
+            <p>Управление аккаунтами менеджеров</p>
+          </div>
         </div>
       </div>
     </div>

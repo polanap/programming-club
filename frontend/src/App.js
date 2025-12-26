@@ -5,6 +5,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ManagerDashboard from './pages/ManagerDashboard';
+import ManagerActivation from './pages/ManagerActivation';
 import CuratorDashboard from './pages/CuratorDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import ClassRoom from './pages/ClassRoom';
@@ -19,10 +20,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
-              path="/manager/*"
+              path="/manager"
               element={
                 <PrivateRoute requiredRole="MANAGER">
                   <ManagerDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/manager/activation"
+              element={
+                <PrivateRoute requiredRole="MANAGER">
+                  <ManagerActivation />
                 </PrivateRoute>
               }
             />
