@@ -23,15 +23,24 @@ api.interceptors.request.use(
   }
 );
 
-// Handle 401 errors
+// Handle 401 errors - only redirect if not on login/register pages
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      // Only redirect if not on login or register pages
+      if (currentPath !== '/login' && currentPath !== '/register') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      } else {
+        // On login/register pages, just clear tokens but don't redirect
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
+    // Don't redirect on 403 errors - let the component handle it
     return Promise.reject(error);
   }
 );

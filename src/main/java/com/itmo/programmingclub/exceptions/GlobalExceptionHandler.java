@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -57,6 +58,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     public ResponseEntity<ErrorMessageResponse> handleUsernameNotFoundException(UsernameNotFoundException e) {
         return ResponseEntity.status(401).body(createAndLogError("Bad credentials", e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity.status(400).body(createAndLogError(e.getMessage(), e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleDisabledException(DisabledException e) {
+        return ResponseEntity.status(403).body(createAndLogError(e.getMessage(), e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleBadCredentialsException(BadCredentialsException e) {
+        return ResponseEntity.status(401).body(createAndLogError(e.getMessage(), e));
     }
 
     private ErrorMessageResponse createAndLogError(String message, Throwable e) {

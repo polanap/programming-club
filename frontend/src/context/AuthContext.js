@@ -39,9 +39,13 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return { success: true };
     } catch (error) {
+      // Extract errorMessage from ErrorMessageResponse
+      const errorMessage = error.response?.data?.errorMessage || 
+                          error.response?.data?.message || 
+                          'Login failed';
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: errorMessage,
       };
     }
   };
@@ -51,9 +55,13 @@ export const AuthProvider = ({ children }) => {
       await authAPI.register(userData);
       return { success: true };
     } catch (error) {
+      // Extract errorMessage from ErrorMessageResponse
+      const errorMessage = error.response?.data?.errorMessage || 
+                          (typeof error.response?.data === 'string' ? error.response.data : null) ||
+                          'Registration failed';
       return {
         success: false,
-        error: error.response?.data || 'Registration failed',
+        error: errorMessage,
       };
     }
   };
