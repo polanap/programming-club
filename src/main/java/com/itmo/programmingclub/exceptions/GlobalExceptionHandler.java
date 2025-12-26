@@ -77,12 +77,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler
+
     public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException e) {
         String message = e.getBindingResult().getAllErrors().stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
 
         return ResponseEntity.badRequest().body(new ErrorMessageResponse(message));
+    }
+    public ResponseEntity<ErrorMessageResponse> handleUnauthorizedException(UnauthorizedException e) {
+        return ResponseEntity.status(401).body(createAndLogError(e.getMessage(), e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleNotFoundException(NotFoundException e) {
+        return ResponseEntity.status(404).body(createAndLogError(e.getMessage(), e));
     }
 
     private ErrorMessageResponse createAndLogError(String message, Throwable e) {

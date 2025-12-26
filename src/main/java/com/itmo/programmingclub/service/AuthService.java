@@ -4,6 +4,7 @@ import com.itmo.programmingclub.model.dto.AuthRequest;
 import com.itmo.programmingclub.model.dto.AuthResponse;
 import com.itmo.programmingclub.model.dto.RegisterRequest;
 import com.itmo.programmingclub.model.entity.User;
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.repository.UserRepository;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.security.JwtTokenProvider;
@@ -39,7 +40,7 @@ public class AuthService {
         
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
-        List<String> roles = userDetails.getUserRoles().stream()
+        List<RoleEnum> roles = userDetails.getUserRoles().stream()
                 .map(ur -> ur.getRole().getRole())
                 .collect(Collectors.toList());
 
@@ -64,7 +65,7 @@ public class AuthService {
         // Use database function to register user
         // The function handles user creation, role assignment, and is_active setting
         // Password needs to be hashed before passing to the function
-        String role = signUpRequest.getRole().toUpperCase();
+        String role = signUpRequest.getRole().name();
         String hashedPassword = passwordEncoder.encode(signUpRequest.getPassword());
         
         userRegistrationService.registerUser(

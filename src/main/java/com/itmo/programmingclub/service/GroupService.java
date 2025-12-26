@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,12 +15,8 @@ import java.util.Optional;
 public class GroupService {
     private final GroupRepository groupRepository;
 
-    public Group createGroup(Group group) {
-        return groupRepository.save(group);
-    }
-
-    public Optional<Group> findById(Integer id) {
-        return groupRepository.findById(id);
+    public Group findById(Integer id) {
+        return groupRepository.findById(id).orElseThrow(() -> new NotFoundException("Group not found"));
     }
 
     public List<Group> findAll() {

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -27,8 +28,8 @@ public class UserRole {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserRoleGroup> userRoleGroups;
+    @ManyToMany(mappedBy = "userRoles")
+    private Set<Group> groups = new HashSet<>();
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserTeam> userTeams;
