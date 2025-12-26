@@ -17,24 +17,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody AuthRequest loginRequest) {
-        try {
-            AuthResponse response = authService.login(loginRequest);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: Authentication failed - " + e.getMessage());
-        }
+        AuthResponse response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest signUpRequest) {
-        try {
-            authService.register(signUpRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: Registration failed - " + e.getMessage());
-        }
+        authService.register(signUpRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
     }
 }
 

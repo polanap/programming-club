@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Entity
-@Table(name = "group")
+@Table(name = "app_group")
 @Getter
 @Setter
 @NoArgsConstructor
