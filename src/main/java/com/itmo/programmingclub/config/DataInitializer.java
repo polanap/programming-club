@@ -1,6 +1,7 @@
 package com.itmo.programmingclub.config;
 
 import com.itmo.programmingclub.model.entity.Role;
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +24,15 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Initializing roles...");
             
             Role studentRole = new Role();
-            studentRole.setRole("STUDENT");
+            studentRole.setRole(RoleEnum.STUDENT);
             roleRepository.save(studentRole);
             
             Role curatorRole = new Role();
-            curatorRole.setRole("CURATOR");
+            curatorRole.setRole(RoleEnum.CURATOR);
             roleRepository.save(curatorRole);
             
             Role managerRole = new Role();
-            managerRole.setRole("MANAGER");
+            managerRole.setRole(RoleEnum.MANAGER);
             roleRepository.save(managerRole);
             
             log.info("Roles initialized successfully");

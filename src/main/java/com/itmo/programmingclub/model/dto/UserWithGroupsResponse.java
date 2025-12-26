@@ -1,24 +1,19 @@
 package com.itmo.programmingclub.model.dto;
 
 import com.itmo.programmingclub.model.RoleEnum;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class AuthResponse {
-    private String token;
-    @Builder.Default
-    private String type = "Bearer";
+public class UserWithGroupsResponse {
     private Integer userId;
     private String username;
+    private String fullName;
     private String email;
     private List<RoleEnum> roles;
+    private List<Integer> groupIds;
 }
 

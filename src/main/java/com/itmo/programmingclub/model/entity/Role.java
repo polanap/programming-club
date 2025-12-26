@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.util.Set;
 
+import com.itmo.programmingclub.model.RoleEnum;
+
 @Entity
 @Table(name = "app_role")
 @Getter
@@ -20,7 +22,8 @@ public class Role {
     private Integer id;
 
     @Column(name = "role", nullable = false, length = 50)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private RoleEnum role;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> userRoles;

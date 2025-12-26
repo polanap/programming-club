@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.model.dto;
 
+import com.itmo.programmingclub.model.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,6 @@ public class RegisterRequest {
     private String password;
     private String email;
     private String fullName;
-    private String role; // STUDENT, CURATOR, MANAGER
+    private RoleEnum role;
 }
 
