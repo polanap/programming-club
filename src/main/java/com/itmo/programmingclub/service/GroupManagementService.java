@@ -3,14 +3,20 @@ package com.itmo.programmingclub.service;
 import com.itmo.programmingclub.model.dto.GroupResponse;
 import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.model.RoleEnum;
+<<<<<<< HEAD
 import com.itmo.programmingclub.model.DayOfWeek;
+=======
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+<<<<<<< HEAD
 import java.time.LocalTime;
+=======
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
 import java.util.List;
 
 @Service
@@ -46,7 +52,11 @@ public class GroupManagementService {
 //     }
 
     // Check if manager has access to group
+<<<<<<< HEAD
     void checkManagerAccess(Integer groupId, Integer managerUserId) {
+=======
+    private void checkManagerAccess(Integer groupId, Integer managerUserId) {
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
         Group group = groupService.findById(groupId);
         UserRole managerUserRole = userRoleService.findByUserIdAndRole(managerUserId, RoleEnum.MANAGER);
 
@@ -133,11 +143,16 @@ public class GroupManagementService {
     }
 
     // FR12: Create schedule for group
+<<<<<<< HEAD
     public Schedule createSchedule(Integer groupId, DayOfWeek dayOfWeek, LocalTime classStartTime, LocalTime classEndTime, Integer managerUserId) {
+=======
+    public Schedule createSchedule(Integer groupId, OffsetDateTime classStartTime, OffsetDateTime classEndTime, Integer managerUserId) {
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
         checkManagerAccess(groupId, managerUserId);
         
         Group group = groupService.findById(groupId);
         
+<<<<<<< HEAD
         // Validate time range
         if (classStartTime.isAfter(classEndTime) || classStartTime.equals(classEndTime)) {
             throw new IllegalArgumentException("Start time must be before end time");
@@ -161,6 +176,9 @@ public class GroupManagementService {
         
         Schedule schedule = new Schedule();
         schedule.setDayOfWeek(dayOfWeek);
+=======
+        Schedule schedule = new Schedule();
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
         schedule.setClassStartTime(classStartTime);
         schedule.setClassEndTime(classEndTime);
         schedule.setIsRelevant(true);
@@ -168,6 +186,7 @@ public class GroupManagementService {
         
         return scheduleRepository.save(schedule);
     }
+<<<<<<< HEAD
     
     // Delete schedule from group
     public void deleteSchedule(Integer groupId, Integer scheduleId, Integer managerUserId) {
@@ -183,6 +202,8 @@ public class GroupManagementService {
         
         scheduleRepository.delete(schedule);
     }
+=======
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
 
     // FR13: Add manager to group
     public void addManagerToGroup(Integer groupId, Integer managerUserId, Integer currentManagerUserId) {
@@ -247,15 +268,24 @@ public class GroupManagementService {
         
         Group group = groupService.findById(groupId);
         
+<<<<<<< HEAD
         long managerCount = group.getUserRoles().stream()
                 .filter(ur -> ur.getRole().getRole() == RoleEnum.MANAGER)
+=======
+        long studentCount = group.getUserRoles().stream()
+                .filter(ur -> ur.getRole().getRole() == RoleEnum.STUDENT)
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
                 .count();
         long curatorCount = group.getUserRoles().stream()
                 .filter(ur -> ur.getRole().getRole() == RoleEnum.CURATOR)
                 .count();
         List<Schedule> schedules = scheduleRepository.findByGroupIdAndIsRelevantTrue(groupId);
         
+<<<<<<< HEAD
         boolean canStart = curatorCount >= 1 && managerCount >= 1 && !schedules.isEmpty();
+=======
+        boolean canStart = studentCount >= 1 && curatorCount >= 1 && !schedules.isEmpty();
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
         
         return GroupResponse.builder()
                 .id(group.getId())
@@ -264,6 +294,7 @@ public class GroupManagementService {
                 .canStart(canStart && !group.isStarted())
                 .build();
     }
+<<<<<<< HEAD
     
     // Get users of a group by role
     public List<com.itmo.programmingclub.model.entity.User> getGroupUsersByRole(Integer groupId, String role, Integer managerUserId) {
@@ -282,5 +313,7 @@ public class GroupManagementService {
                 .distinct()
                 .collect(java.util.stream.Collectors.toList());
     }
+=======
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
 }
 

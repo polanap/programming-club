@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.model.dto;
 
+
 import com.itmo.programmingclub.model.DayOfWeek;
 import lombok.AllArgsConstructor;
 import lombok.Data;

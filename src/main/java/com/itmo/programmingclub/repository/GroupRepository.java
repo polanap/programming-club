@@ -9,8 +9,11 @@ import com.itmo.programmingclub.model.entity.Group;
 import com.itmo.programmingclub.model.RoleEnum;
 import java.util.List;
 
+import java.util.List;
+
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Integer> {
+<<<<<<< HEAD
     @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoles ur JOIN ur.user u WHERE u.id = :userId")
     List<Group> findByUserId(@Param("userId") Integer userId);
     
@@ -23,4 +26,8 @@ public interface GroupRepository extends JpaRepository<Group, Integer> {
         WHERE u.id = :userId AND r.role = :role
         """)
     List<Group> findByUserIdAndRole(@Param("userId") Integer userId, @Param("role") RoleEnum role);
+=======
+    @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoleGroups urg JOIN urg.userRole ur JOIN ur.user u WHERE u.id = :userId")
+    List<Group> findByUserId(@Param("userId") Integer userId);
+>>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
 }

@@ -27,7 +27,6 @@ public class RegisterRequest {
     @NotBlank(message = "Full name cannot be empty")
     @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ\\s'-]+$", message = "Full name can only contain letters, spaces, hyphens and apostrophes")
     private String fullName;
-
     private RoleEnum role;
 }
 
