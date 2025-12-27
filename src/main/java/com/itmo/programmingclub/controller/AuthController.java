@@ -4,6 +4,7 @@ import com.itmo.programmingclub.model.dto.AuthRequest;
 import com.itmo.programmingclub.model.dto.AuthResponse;
 import com.itmo.programmingclub.model.dto.RegisterRequest;
 import com.itmo.programmingclub.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest signUpRequest) {
         authService.register(signUpRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
     }
