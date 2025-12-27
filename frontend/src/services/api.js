@@ -119,5 +119,11 @@ export const elderChangeRequestAPI = {
   update: (id, request) => api.put(`/elder-change-requests/${id}`, request),
 };
 
+export const managerAPI = {
+  getInactive: (page = 0, size = 10) => 
+    api.get('/managers/inactive', { params: { page, size } }),
+  activate: (userId) => api.post(`/managers/${userId}/activate`),
+};
+
 export default api;
 
