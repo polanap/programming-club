@@ -8,11 +8,14 @@ import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.model.entity.UserRole;
 import com.itmo.programmingclub.repository.UserRepository;
 import com.itmo.programmingclub.repository.UserRoleRepository;
+import com.itmo.programmingclub.service.ManagerActivationService;
 import com.itmo.programmingclub.service.UserRegistrationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -22,8 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -52,6 +54,9 @@ public class AuthIntegrationTest {
     @MockitoBean
     private UserRegistrationService userRegistrationService;
 
+    @MockitoBean
+    private ManagerActivationService managerActivationService;
+
     private void mockUserDoesNotExist() {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
@@ -77,7 +82,17 @@ public class AuthIntegrationTest {
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userRoleRepository.findByUserId(user.getId())).thenReturn(Collections.singletonList(userRole));
+    }
 
+    private String obtainToken(String username, String password) throws Exception {
+        AuthRequest loginRequest = new AuthRequest(username, password);
+        String response = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        return objectMapper.readTree(response).get("token").asText();
     }
 
     @Test
@@ -234,14 +249,9 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldAllowAccessWithToken() throws Exception {
-        createMockUser("studentAccess", "pass", "STUDENT", true);
+        createMockUser("student", "pass", "STUDENT", true);
 
-        String response = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new AuthRequest("studentAccess", "pass"))))
-                .andReturn().getResponse().getContentAsString();
-
-        String token = objectMapper.readTree(response).get("token").asText();
+        String token = obtainToken("student", "pass");
 
         mockMvc.perform(get("/api/tasks")
                         .header("Authorization", "Bearer " + token))
@@ -365,5 +375,39 @@ public class AuthIntegrationTest {
         mockMvc.perform(get("/api/tasks")
                         .header("Authorization", token))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldDenyStudentAccessToManagerResource() throws Exception {
+        createMockUser("student1", "pass", "STUDENT", true);
+        String token = obtainToken("student1", "pass");
+
+        mockMvc.perform(get("/api/managers/inactive")
+                        .header("Authorization", "Bearer " + token))
+                .andDo(print())
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldDenyCuratorAccessToManagerResource() throws Exception {
+        createMockUser("curator1", "pass", "CURATOR", true);
+        String token = obtainToken("curator1", "pass");
+
+        mockMvc.perform(get("/api/managers/inactive")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void shouldAllowActiveManagerAccessToManagerResource() throws Exception {
+        createMockUser("activeManager", "pass", "MANAGER", true);
+        String token = obtainToken("activeManager", "pass");
+
+        when(userRepository.findInactiveManagers(any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        mockMvc.perform(get("/api/managers/inactive")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
     }
 }
