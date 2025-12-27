@@ -1,16 +1,24 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { RoleEnum } from '../types';
+import styles from './Login.module.scss';
 import '../App.css';
 
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login } = useContext(AuthContext);
+const Login: React.FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  if (!authContext) {
+    throw new Error('AuthContext must be used within AuthProvider');
+  }
+
+  const { login } = authContext;
+
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
@@ -18,21 +26,24 @@ const Login = () => {
     
     if (result.success) {
       // Redirect based on user role
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user.roles.includes('MANAGER')) {
-        navigate('/manager');
-      } else if (user.roles.includes('CURATOR')) {
-        navigate('/curator');
-      } else if (user.roles.includes('STUDENT')) {
-        navigate('/student');
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.roles.includes(RoleEnum.MANAGER)) {
+          navigate('/manager');
+        } else if (user.roles.includes(RoleEnum.CURATOR)) {
+          navigate('/curator');
+        } else if (user.roles.includes(RoleEnum.STUDENT)) {
+          navigate('/student');
+        }
       }
     } else {
       setError(result.error || 'Invalid username or password');
     }
-  };
+  }, [username, password, login, navigate]);
 
   return (
-    <div className="container" style={{ maxWidth: '400px', marginTop: '100px' }}>
+    <div className={`container ${styles.container}`}>
       <div className="card">
         <h2>Вход в систему</h2>
         <form onSubmit={handleSubmit}>
@@ -54,12 +65,12 @@ const Login = () => {
               required
             />
           </div>
-          {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+          {error && <div className={styles.errorMessage}>{error}</div>}
+          <button type="submit" className={`btn btn-primary ${styles.submitButton}`}>
             Войти
           </button>
         </form>
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <div className={styles.linkContainer}>
           <a href="/register">Нет аккаунта? Зарегистрироваться</a>
         </div>
       </div>

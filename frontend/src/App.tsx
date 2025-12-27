@@ -6,12 +6,13 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ManagerActivation from './pages/ManagerActivation';
+import GroupManagement from './pages/GroupManagement';
 import CuratorDashboard from './pages/CuratorDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import ClassRoom from './pages/ClassRoom';
 import './App.css';
 
-function App() {
+const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
@@ -32,6 +33,14 @@ function App() {
               element={
                 <PrivateRoute requiredRole="MANAGER">
                   <ManagerActivation />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/manager/groups"
+              element={
+                <PrivateRoute requiredRole="MANAGER">
+                  <GroupManagement />
                 </PrivateRoute>
               }
             />
@@ -65,7 +74,7 @@ function App() {
       </Router>
     </AuthProvider>
   );
-}
+};
 
 export default App;
 

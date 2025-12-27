@@ -1,29 +1,37 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { RegisterRequest, RoleEnum } from '../types';
+import styles from './Register.module.scss';
 import '../App.css';
 
-const Register = () => {
-  const [formData, setFormData] = useState({
+const Register: React.FC = () => {
+  const [formData, setFormData] = useState<RegisterRequest>({
     username: '',
     password: '',
     email: '',
     fullName: '',
-    role: 'STUDENT',
+    role: RoleEnum.STUDENT,
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const { register } = useContext(AuthContext);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<boolean>(false);
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  if (!authContext) {
+    throw new Error('AuthContext must be used within AuthProvider');
+  }
+
+  const { register } = authContext;
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-  };
+  }, [formData]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
@@ -38,10 +46,10 @@ const Register = () => {
     } else {
       setError(typeof result.error === 'string' ? result.error : 'Registration failed');
     }
-  };
+  }, [formData, register, navigate]);
 
   return (
-    <div className="container" style={{ maxWidth: '500px', marginTop: '50px' }}>
+    <div className={`container ${styles.container}`}>
       <div className="card">
         <h2>Регистрация</h2>
         <form onSubmit={handleSubmit}>
@@ -93,22 +101,22 @@ const Register = () => {
               onChange={handleChange}
               required
             >
-              <option value="STUDENT">Ученик</option>
-              <option value="CURATOR">Куратор</option>
-              <option value="MANAGER">Менеджер</option>
+              <option value={RoleEnum.STUDENT}>Ученик</option>
+              <option value={RoleEnum.CURATOR}>Куратор</option>
+              <option value={RoleEnum.MANAGER}>Менеджер</option>
             </select>
           </div>
-          {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+          {error && <div className={styles.errorMessage}>{error}</div>}
           {success && (
-            <div style={{ color: 'green', marginBottom: '10px' }}>
+            <div className={styles.successMessage}>
               Регистрация успешна! Перенаправление на страницу входа...
             </div>
           )}
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+          <button type="submit" className={`btn btn-primary ${styles.submitButton}`}>
             Зарегистрироваться
           </button>
         </form>
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <div className={styles.linkContainer}>
           <a href="/login">Уже есть аккаунт? Войти</a>
         </div>
       </div>

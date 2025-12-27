@@ -1,11 +1,16 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { authAPI } from '../services/api';
+import { AuthContextType, AuthUser } from '../types';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -22,12 +27,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (username, password) => {
+  const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await authAPI.login(username, password);
       const { token, userId, username: userUsername, email, roles } = response.data;
       
-      const userData = {
+      const userData: AuthUser = {
         id: userId,
         username: userUsername,
         email,
@@ -38,7 +43,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       // Extract errorMessage from ErrorMessageResponse
       const errorMessage = error.response?.data?.errorMessage || 
                           error.response?.data?.message || 
@@ -48,13 +53,13 @@ export const AuthProvider = ({ children }) => {
         error: errorMessage,
       };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData: any): Promise<{ success: boolean; error?: string }> => {
     try {
       await authAPI.register(userData);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       // Extract errorMessage from ErrorMessageResponse
       const errorMessage = error.response?.data?.errorMessage || 
                           (typeof error.response?.data === 'string' ? error.response.data : null) ||
@@ -64,19 +69,19 @@ export const AuthProvider = ({ children }) => {
         error: errorMessage,
       };
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-  };
+  }, []);
 
-  const hasRole = (role) => {
-    return user?.roles?.includes(role);
-  };
+  const hasRole = useCallback((role: string): boolean => {
+    return user?.roles?.includes(role as any) || false;
+  }, [user]);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     login,
     register,

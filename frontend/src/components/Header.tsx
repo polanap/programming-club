@@ -1,30 +1,38 @@
-import React, { useContext } from 'react';
+import React, { useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { RoleEnum } from '../types';
+import styles from './Header.module.scss';
 import '../App.css';
 
-const Header = () => {
-  const { user, logout } = useContext(AuthContext);
+const Header: React.FC = () => {
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  if (!authContext) {
+    throw new Error('AuthContext must be used within AuthProvider');
+  }
+
+  const { user, logout } = authContext;
+
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
-  const getRoleName = (role) => {
-    const roleNames = {
+  const getRoleName = useCallback((role: RoleEnum): string => {
+    const roleNames: Record<string, string> = {
       MANAGER: 'Менеджер',
       CURATOR: 'Куратор',
       STUDENT: 'Ученик',
     };
     return roleNames[role] || role;
-  };
+  }, []);
 
   return (
-    <div className="header">
+    <div className={styles.header}>
       <h1>Программистский клуб</h1>
-      <div className="header-actions">
+      <div className={styles.headerActions}>
         {user && (
           <>
             <span>

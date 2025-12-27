@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
-import { classAPI, transferRequestAPI } from '../services/api';
+import { classAPI } from '../services/api';
+import { Class } from '../types';
+import styles from './StudentDashboard.module.scss';
 
-const StudentDashboard = () => {
-  const [classes, setClasses] = useState([]);
-  const [loading, setLoading] = useState(true);
+const StudentDashboard: React.FC = () => {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const classesRes = await classAPI.getAll();
       setClasses(classesRes.data);
@@ -21,10 +19,19 @@ const StudentDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   if (loading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div>
+        <Header />
+        <div className={styles.loading}>Загрузка...</div>
+      </div>
+    );
   }
 
   return (
@@ -33,13 +40,13 @@ const StudentDashboard = () => {
       <div className="dashboard">
         <h2>Панель ученика</h2>
         
-        <div className="dashboard-grid">
-          <div className="dashboard-card" onClick={() => navigate('/student/classes')}>
+        <div className={styles.dashboardGrid}>
+          <div className={styles.dashboardCard} onClick={() => navigate('/student/classes')}>
             <h3>Занятия</h3>
             <p>Доступных занятий: {classes.length}</p>
           </div>
           
-          <div className="dashboard-card" onClick={() => navigate('/student/transfer-request')}>
+          <div className={styles.dashboardCard} onClick={() => navigate('/student/transfer-request')}>
             <h3>Заявка на перевод</h3>
             <p>Подать заявку на перевод в другую группу</p>
           </div>
