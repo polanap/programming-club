@@ -1,15 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ManagerDashboard from './pages/ManagerDashboard';
-import ManagerActivation from './pages/ManagerActivation';
-import GroupManagement from './pages/GroupManagement';
-import CuratorDashboard from './pages/CuratorDashboard';
-import StudentDashboard from './pages/StudentDashboard';
-import ClassRoom from './pages/ClassRoom';
+import PrivateRoute from './components/privateRoute/PrivateRoute';
+import Register from './pages/register/Register';
+import ManagerDashboard from './pages/dashBoards/managerDashBoard/ManagerDashboard';
+import ManagerActivation from './pages/managerActivation/ManagerActivation';
+import GroupManagement from './pages/groupManagement/GroupManagement';
+import CuratorDashboard from './pages/dashBoards/curatorDashBoard/CuratorDashboard';
+import ClassRoom from './pages/classRoom/ClassRoom';
+import StudentDashboard from './pages/dashBoards/studentDashboard/StudentDashboard';
+import Login from './pages/login/Login';
+
 import './App.css';
 
 const App: React.FC = () => {

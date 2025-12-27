@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { managerAPI } from '../services/api';
-import Header from '../components/Header';
-import { InactiveManager, PageResponse } from '../types';
+import { managerAPI } from '../../services/api';
+import Header from '../../components/header/Header';
+import { InactiveManager, PageResponse } from '../../types';
 import styles from './ManagerActivation.module.scss';
 import '../App.css';
 

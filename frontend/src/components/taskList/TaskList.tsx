@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Task } from '../types';
+import { Task } from '../../types';
 import styles from './TaskList.module.scss';
 
 interface TaskListProps {

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { RegisterRequest, RoleEnum } from '../types';
+import { AuthContext } from '../../context/AuthContext';
+import { RegisterRequest, RoleEnum } from '../../types';
 import styles from './Register.module.scss';
 import '../App.css';
 

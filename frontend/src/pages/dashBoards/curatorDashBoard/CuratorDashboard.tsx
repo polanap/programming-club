@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import { taskAPI, groupAPI } from '../services/api';
-import { Task, Group, AuthUser } from '../types';
+import Header from '../../../components/header/Header';
+import { taskAPI, groupAPI } from '../../../services/api';
+import { Task, Group, AuthUser } from '../../../types';
 import styles from './CuratorDashboard.module.scss';
 
 const CuratorDashboard: React.FC = () => {

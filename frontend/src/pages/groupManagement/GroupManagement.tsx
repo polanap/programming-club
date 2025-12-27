@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import UsersTable from '../components/UsersTable';
-import { groupAPI, userAPI } from '../services/api';
-import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType } from '../types';
+import Header from '../../components/header/Header';
+import UsersTable from '../../components/userTable/UsersTable';
+import { groupAPI, userAPI } from '../../services/api';
+import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType } from '../../types';
 import styles from './GroupManagement.module.scss';
 import '../App.css';
 

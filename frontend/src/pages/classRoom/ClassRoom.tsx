@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import Header from '../components/Header';
-import CodeEditor from '../components/CodeEditor';
-import TaskList from '../components/TaskList';
-import HandRaiseButton from '../components/HandRaiseButton';
-import { classAPI, taskAPI, teamAPI } from '../services/api';
-import { Class, Task, Team, AuthUser, RoleEnum } from '../types';
+import Header from '../../components/header/Header';
+import CodeEditor from '../../components/codeEditor/CodeEditor';
+import TaskList from '../../components/taskList/TaskList';
+import HandRaiseButton from '../../components/handRiseButton/HandRaiseButton';
+import { classAPI, taskAPI, teamAPI } from '../../services/api';
+import { Class, Task, Team, AuthUser, RoleEnum } from '../../types';
 import styles from './ClassRoom.module.scss';
 
 const ClassRoom: React.FC = () => {

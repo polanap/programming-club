@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import { groupAPI, userAPI, transferRequestAPI } from '../services/api';
-import { Group, User } from '../types';
-import { AuthUser } from '../types';
+import Header from '../../../components/header/Header';
+import { groupAPI, userAPI, transferRequestAPI } from '../../../services/api';
+import { Group, User } from '../../../types';
+import { AuthUser } from '../../../types';
 import styles from './ManagerDashboard.module.scss';
 
 interface TransferRequest {
