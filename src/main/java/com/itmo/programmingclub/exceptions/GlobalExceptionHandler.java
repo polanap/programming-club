@@ -2,6 +2,7 @@ package com.itmo.programmingclub.exceptions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -73,6 +74,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     public ResponseEntity<ErrorMessageResponse> handleBadCredentialsException(BadCredentialsException e) {
         return ResponseEntity.status(401).body(createAndLogError(e.getMessage(), e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleValidationException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getAllErrors().stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+
+        return ResponseEntity.badRequest().body(new ErrorMessageResponse(message));
     }
 
     private ErrorMessageResponse createAndLogError(String message, Throwable e) {
