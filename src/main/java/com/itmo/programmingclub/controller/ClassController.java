@@ -2,9 +2,13 @@ package com.itmo.programmingclub.controller;
 
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.service.ClassService;
+import com.itmo.programmingclub.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClassController {
     private final ClassService classService;
+    private final TaskService taskService;
 
     @GetMapping
     public ResponseEntity<List<Class>> getAllClasses() {
@@ -55,6 +60,23 @@ public class ClassController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{classId}/tasks/{taskId}")
+    @PreAuthorize("hasRole('CURATOR')")
+    public ResponseEntity<Void> assignTaskToClass(@PathVariable Integer classId,
+                                                  @PathVariable Integer taskId,
+                                                  @AuthenticationPrincipal UserDetails userDetails) {
+        taskService.assignTaskToClass(classId, taskId, userDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{classId}/tasks/{taskId}")
+    @PreAuthorize("hasRole('CURATOR')")
+    public ResponseEntity<Void> removeTaskFromClass(@PathVariable Integer classId,
+                                                    @PathVariable Integer taskId) {
+        taskService.removeTaskFromClass(classId, taskId);
+        return ResponseEntity.noContent().build();
     }
 }
 

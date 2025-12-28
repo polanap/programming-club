@@ -3,8 +3,10 @@ package com.itmo.programmingclub.exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -85,9 +87,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ErrorMessageResponse(message));
     }
 
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleAccessDeniedException(AccessDeniedException e) {
+        return ResponseEntity.status(403).body(createAndLogError(e.getMessage(), e));
+    }
+
     private ErrorMessageResponse createAndLogError(String message, Throwable e) {
         log.error(message, e);
         return new ErrorMessageResponse(message);
     }
+
 }
 
