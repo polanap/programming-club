@@ -3,12 +3,14 @@ package com.itmo.programmingclub.service;
 import com.itmo.programmingclub.model.dto.GroupResponse;
 import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.DayOfWeek;
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -131,12 +133,13 @@ public class GroupManagementService {
     }
 
     // FR12: Create schedule for group
-    public Schedule createSchedule(Integer groupId, OffsetDateTime classStartTime, OffsetDateTime classEndTime, Integer managerUserId) {
+    public Schedule createSchedule(Integer groupId, DayOfWeek dayOfWeek, LocalTime classStartTime, LocalTime classEndTime, Integer managerUserId) {
         checkManagerAccess(groupId, managerUserId);
         
         Group group = groupService.findById(groupId);
         
         Schedule schedule = new Schedule();
+        schedule.setDayOfWeek(dayOfWeek);
         schedule.setClassStartTime(classStartTime);
         schedule.setClassEndTime(classEndTime);
         schedule.setIsRelevant(true);

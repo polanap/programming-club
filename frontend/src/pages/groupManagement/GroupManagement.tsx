@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/header/Header';
 import UsersTable from '../../components/userTable/UsersTable';
 import { groupAPI, userAPI } from '../../services/api';
-import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType } from '../../types';
+import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType, DayOfWeek, CreateScheduleRequest } from '../../types';
 import styles from './GroupManagement.module.scss';
 import '../../App.css';
 
@@ -26,6 +26,7 @@ const GroupManagement: React.FC = () => {
   const [showScheduleModal, setShowScheduleModal] = useState<boolean>(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState<DayOfWeek>(DayOfWeek.MONDAY);
   const [scheduleStartTime, setScheduleStartTime] = useState<string>('');
   const [scheduleEndTime, setScheduleEndTime] = useState<string>('');
   const [groupUsers, setGroupUsers] = useState<GroupUsers>({ students: [], curators: [], managers: [] });
@@ -158,17 +159,15 @@ const GroupManagement: React.FC = () => {
     if (!scheduleStartTime || !scheduleEndTime || !selectedGroup) return;
 
     try {
-      // Convert local datetime to ISO string for OffsetDateTime
-      const startDateTime = new Date(scheduleStartTime).toISOString();
-      const endDateTime = new Date(scheduleEndTime).toISOString();
-      
-      const scheduleData = {
-        classStartTime: startDateTime,
-        classEndTime: endDateTime,
+      const scheduleData: CreateScheduleRequest = {
+        dayOfWeek: scheduleDayOfWeek,
+        classStartTime: scheduleStartTime,
+        classEndTime: scheduleEndTime,
       };
       await groupAPI.createSchedule(selectedGroup.id, scheduleData);
       await loadGroupDetails(selectedGroup.id);
       setShowScheduleModal(false);
+      setScheduleDayOfWeek(DayOfWeek.MONDAY);
       setScheduleStartTime('');
       setScheduleEndTime('');
       alert('Расписание успешно создано');
@@ -176,7 +175,7 @@ const GroupManagement: React.FC = () => {
       alert(err.response?.data?.errorMessage || 'Ошибка создания расписания');
       console.error('Error creating schedule:', err);
     }
-  }, [scheduleStartTime, scheduleEndTime, selectedGroup, loadGroupDetails]);
+  }, [scheduleStartTime, scheduleEndTime, scheduleDayOfWeek, selectedGroup, loadGroupDetails]);
 
   const handleStartGroup = useCallback(async () => {
     if (!window.confirm('Вы уверены, что хотите запустить эту группу?')) {
@@ -240,6 +239,7 @@ const GroupManagement: React.FC = () => {
 
   const handleCloseScheduleModal = useCallback(() => {
     setShowScheduleModal(false);
+    setScheduleDayOfWeek(DayOfWeek.MONDAY);
     setScheduleStartTime('');
     setScheduleEndTime('');
   }, []);
@@ -463,10 +463,28 @@ const GroupManagement: React.FC = () => {
               <h3>Создать расписание</h3>
               <div className={styles.modalFormGroup}>
                 <label className={styles.modalLabel}>
+                  День недели:
+                </label>
+                <select
+                  value={scheduleDayOfWeek}
+                  onChange={(e) => setScheduleDayOfWeek(e.target.value as DayOfWeek)}
+                  className={styles.modalSelect}
+                >
+                  <option value={DayOfWeek.MONDAY}>Понедельник</option>
+                  <option value={DayOfWeek.TUESDAY}>Вторник</option>
+                  <option value={DayOfWeek.WEDNESDAY}>Среда</option>
+                  <option value={DayOfWeek.THURSDAY}>Четверг</option>
+                  <option value={DayOfWeek.FRIDAY}>Пятница</option>
+                  <option value={DayOfWeek.SATURDAY}>Суббота</option>
+                  <option value={DayOfWeek.SUNDAY}>Воскресенье</option>
+                </select>
+              </div>
+              <div className={styles.modalFormGroup}>
+                <label className={styles.modalLabel}>
                   Время начала:
                 </label>
                 <input
-                  type="datetime-local"
+                  type="time"
                   value={scheduleStartTime}
                   onChange={(e) => setScheduleStartTime(e.target.value)}
                   className={styles.modalInput}
@@ -477,7 +495,7 @@ const GroupManagement: React.FC = () => {
                   Время окончания:
                 </label>
                 <input
-                  type="datetime-local"
+                  type="time"
                   value={scheduleEndTime}
                   onChange={(e) => setScheduleEndTime(e.target.value)}
                   className={styles.modalInput}

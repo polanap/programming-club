@@ -4,6 +4,16 @@ export enum RoleEnum {
   MANAGER = 'MANAGER'
 }
 
+export enum DayOfWeek {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY'
+}
+
 export interface User {
   id: number;
   username: string;
@@ -28,6 +38,7 @@ export interface GroupResponse {
 
 export interface Schedule {
   id: number;
+  dayOfWeek: DayOfWeek;
   classStartTime: string;
   classEndTime: string;
   isRelevant: boolean;
@@ -52,6 +63,7 @@ export interface Class {
 }
 
 export interface CreateScheduleRequest {
+  dayOfWeek: DayOfWeek;
   classStartTime: string;
   classEndTime: string;
 }

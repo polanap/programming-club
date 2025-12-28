@@ -96,7 +96,8 @@ public class GroupManagementController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Schedule schedule = groupManagementService.createSchedule(
-                groupId, 
+                groupId,
+                request.getDayOfWeek(),
                 request.getClassStartTime(), 
                 request.getClassEndTime(),
                 currentUser.getUserId()
