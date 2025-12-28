@@ -1,7 +1,11 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
+import com.itmo.programmingclub.model.dto.ClassRequestDTO;
 import com.itmo.programmingclub.model.entity.Class;
+import com.itmo.programmingclub.model.entity.Schedule;
 import com.itmo.programmingclub.repository.ClassRepository;
+import com.itmo.programmingclub.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +18,15 @@ import java.util.Optional;
 @Transactional
 public class ClassService {
     private final ClassRepository classRepository;
+    private final ScheduleRepository scheduleRepository;
 
-    public Class createClass(Class classEntity) {
+    public Class createClass(ClassRequestDTO dto) {
+        Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
+                .orElseThrow(() -> new NotFoundException("Schedule not found"));
+
+        Class classEntity = new Class();
+        classEntity.setSchedule(schedule);
+
         return classRepository.save(classEntity);
     }
 
@@ -31,7 +42,14 @@ public class ClassService {
         return classRepository.findByScheduleId(scheduleId);
     }
 
-    public Class updateClass(Class classEntity) {
+    public Class updateClass(Integer id, ClassRequestDTO dto) {
+        Class classEntity = classRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Class not found"));
+
+        Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
+                .orElseThrow(() -> new NotFoundException("Schedule not found"));
+
+        classEntity.setSchedule(schedule);
         return classRepository.save(classEntity);
     }
 

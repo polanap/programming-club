@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -28,5 +29,21 @@ public class Class {
 
     @OneToMany(mappedBy = "classEntity", cascade = CascadeType.ALL)
     private Set<Event> events;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "class_task",
+            joinColumns = @JoinColumn(name = "class_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
+    private Set<Task> tasks = new HashSet<>();
+
+    public void addTask(Task task) {
+        this.tasks.add(task);
+    }
+
+    public void removeTask(Task task) {
+        this.tasks.remove(task);
+    }
 }
 
