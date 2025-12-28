@@ -24,6 +24,7 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRoleService userRoleService;
+    private final ClassService classService;
 
     public Group findById(Integer id) {
         return groupRepository.findById(id).orElseThrow(() -> new NotFoundException("Group not found"));
@@ -259,7 +260,10 @@ public class GroupService {
         
         // Start the group by setting startTime to current time
         group.setStartTime(OffsetDateTime.now());
-        groupRepository.save(group);
+        group = groupRepository.save(group);
+        
+        // FR: Create classes for current week where start time is after group start time
+        classService.generateClassesForCurrentWeek(group);
     }
 
     // Get group details

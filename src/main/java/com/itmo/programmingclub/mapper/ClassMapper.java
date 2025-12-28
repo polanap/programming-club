@@ -20,6 +20,7 @@ public class ClassMapper {
         return ClassResponseDTO.builder()
                 .id(classEntity.getId())
                 .scheduleId(classEntity.getSchedule() != null ? classEntity.getSchedule().getId() : null)
+                .classDate(classEntity.getClassDate())
                 .tasks(classEntity.getTasks() != null ?
                         classEntity.getTasks().stream().map(taskMapper::toDto).collect(Collectors.toList()) :
                         Collections.emptyList())

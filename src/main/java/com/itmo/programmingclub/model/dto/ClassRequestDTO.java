@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -13,4 +15,6 @@ import lombok.NoArgsConstructor;
 public class ClassRequestDTO {
     @NotNull(message = "Schedule ID is required")
     private Integer scheduleId;
+    
+    private LocalDate classDate; // Optional - defaults to today if not provided
 }
