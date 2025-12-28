@@ -57,6 +57,7 @@ public class TaskController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> createTask(@Valid @RequestBody TaskDTO taskDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         Task createdTask = taskService.createTask(taskDTO, userDetails.getUsername());
@@ -64,6 +65,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable Integer id,
                                                       @Valid @RequestBody TaskDTO taskDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
@@ -72,6 +74,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer id,
                                            @AuthenticationPrincipal UserDetails userDetails) {
         taskService.deleteTask(id, userDetails.getUsername());
