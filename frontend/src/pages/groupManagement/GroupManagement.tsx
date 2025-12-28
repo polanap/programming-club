@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/header/Header';
 import UsersTable from '../../components/userTable/UsersTable';
-import { groupAPI, userAPI } from '../../services/api';
-import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType, DayOfWeek, CreateScheduleRequest } from '../../types';
+import { groupAPI, userAPI, scheduleAPI } from '../../services/api';
+import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType, DayOfWeek, CreateScheduleRequest, Schedule } from '../../types';
 import styles from './GroupManagement.module.scss';
 import '../../App.css';
 
@@ -31,6 +31,7 @@ const GroupManagement: React.FC = () => {
   const [scheduleEndTime, setScheduleEndTime] = useState<string>('');
   const [groupUsers, setGroupUsers] = useState<GroupUsers>({ students: [], curators: [], managers: [] });
   const [users, setUsers] = useState<UsersByType>({ students: [], curators: [], managers: [] });
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const navigate = useNavigate();
 
   const loadData = useCallback(async () => {
@@ -89,12 +90,23 @@ const GroupManagement: React.FC = () => {
     }
   }, []);
 
+  const loadGroupSchedules = useCallback(async (groupId: number) => {
+    try {
+      const response = await scheduleAPI.getRelevantByGroup(groupId);
+      setSchedules(Array.isArray(response.data) ? response.data : []);
+    } catch (err: any) {
+      console.error('Error loading group schedules:', err);
+      setSchedules([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedGroup) {
       loadGroupDetails(selectedGroup.id);
       loadGroupUsers(selectedGroup.id);
+      loadGroupSchedules(selectedGroup.id);
     }
-  }, [selectedGroup, loadGroupDetails, loadGroupUsers]);
+  }, [selectedGroup, loadGroupDetails, loadGroupUsers, loadGroupSchedules]);
 
   const handleCreateGroup = useCallback(async () => {
     try {
@@ -166,6 +178,7 @@ const GroupManagement: React.FC = () => {
       };
       await groupAPI.createSchedule(selectedGroup.id, scheduleData);
       await loadGroupDetails(selectedGroup.id);
+      await loadGroupSchedules(selectedGroup.id);
       setShowScheduleModal(false);
       setScheduleDayOfWeek(DayOfWeek.MONDAY);
       setScheduleStartTime('');
@@ -175,7 +188,7 @@ const GroupManagement: React.FC = () => {
       alert(err.response?.data?.errorMessage || 'Ошибка создания расписания');
       console.error('Error creating schedule:', err);
     }
-  }, [scheduleStartTime, scheduleEndTime, scheduleDayOfWeek, selectedGroup, loadGroupDetails]);
+  }, [scheduleStartTime, scheduleEndTime, scheduleDayOfWeek, selectedGroup, loadGroupDetails, loadGroupSchedules]);
 
   const handleStartGroup = useCallback(async () => {
     if (!window.confirm('Вы уверены, что хотите запустить эту группу?')) {
@@ -220,6 +233,29 @@ const GroupManagement: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }, []);
+
+  const formatDayOfWeek = useCallback((dayOfWeek: DayOfWeek): string => {
+    const dayNames: Record<DayOfWeek, string> = {
+      [DayOfWeek.MONDAY]: 'Понедельник',
+      [DayOfWeek.TUESDAY]: 'Вторник',
+      [DayOfWeek.WEDNESDAY]: 'Среда',
+      [DayOfWeek.THURSDAY]: 'Четверг',
+      [DayOfWeek.FRIDAY]: 'Пятница',
+      [DayOfWeek.SATURDAY]: 'Суббота',
+      [DayOfWeek.SUNDAY]: 'Воскресенье',
+    };
+    return dayNames[dayOfWeek] || dayOfWeek;
+  }, []);
+
+  const formatTime = useCallback((timeString: string | undefined): string => {
+    if (!timeString) return '-';
+    // Если время приходит в формате "HH:mm:ss" или "HH:mm", просто форматируем
+    const time = timeString.split(':');
+    if (time.length >= 2) {
+      return `${time[0]}:${time[1]}`;
+    }
+    return timeString;
   }, []);
 
   const handleGroupSelect = useCallback((group: Group) => {
@@ -390,9 +426,32 @@ const GroupManagement: React.FC = () => {
                           </button>
                         )}
                       </div>
-                      <div className={styles.schedulePlaceholder}>
-                        <p className={styles.schedulePlaceholderText}>Информация о расписании будет отображаться здесь</p>
-                      </div>
+                      {schedules.length === 0 ? (
+                        <div className={styles.schedulePlaceholder}>
+                          <p className={styles.schedulePlaceholderText}>Нет расписаний. Используйте кнопку 'Создать расписание' для добавления.</p>
+                        </div>
+                      ) : (
+                        <div className={styles.scheduleTableContainer}>
+                          <table className={styles.scheduleTable}>
+                            <thead>
+                              <tr className={styles.scheduleTableHead}>
+                                <th className={styles.scheduleTableHeader}>День недели</th>
+                                <th className={styles.scheduleTableHeader}>Время начала</th>
+                                <th className={styles.scheduleTableHeader}>Время окончания</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {schedules.map((schedule) => (
+                                <tr key={schedule.id} className={styles.scheduleTableRow}>
+                                  <td className={styles.scheduleTableCell}>{formatDayOfWeek(schedule.dayOfWeek)}</td>
+                                  <td className={styles.scheduleTableCell}>{formatTime(schedule.classStartTime)}</td>
+                                  <td className={styles.scheduleTableCell}>{formatTime(schedule.classEndTime)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
                     </div>
 
                     {/* Start Group Button */}
