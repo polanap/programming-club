@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,7 +44,7 @@ public class ClassController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ClassResponseDTO> getClassById(@PathVariable Integer id) {
-        return classService.findById(id)
+        return classService.findByIdWithTasks(id)
                 .map(classMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -59,22 +58,39 @@ public class ClassController {
         return ResponseEntity.ok(dtos);
     }
 
+    @GetMapping("/group/{groupId}")
+    public ResponseEntity<List<ClassResponseDTO>> getClassesByGroup(@PathVariable Integer groupId) {
+        List<ClassResponseDTO> dtos = classService.findByGroupId(groupId).stream()
+                .map(classMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/curator/my")
+    public ResponseEntity<List<ClassResponseDTO>> getMyClasses(@AuthenticationPrincipal UserDetails userDetails) {
+        com.itmo.programmingclub.security.CustomUserDetails customUserDetails = 
+            (com.itmo.programmingclub.security.CustomUserDetails) userDetails;
+        Integer curatorId = customUserDetails.getUserId();
+        System.err.println(curatorId);
+        List<ClassResponseDTO> dtos = classService.findByCuratorId(curatorId).stream()
+                .map(classMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @PostMapping
-    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ClassResponseDTO> createClass(@Valid @RequestBody ClassRequestDTO dto) {
         Class created = classService.createClass(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(classMapper.toDto(created));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<ClassResponseDTO> updateClass(@PathVariable Integer id, @Valid @RequestBody ClassRequestDTO dto) {
         Class updated = classService.updateClass(id, dto);
         return ResponseEntity.ok(classMapper.toDto(updated));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> deleteClass(@PathVariable Integer id) {
         if (classService.findById(id).isPresent()) {
             classService.deleteClass(id);
@@ -84,7 +100,6 @@ public class ClassController {
     }
 
     @PostMapping("/{classId}/tasks/{taskId}")
-    @PreAuthorize("hasRole('CURATOR')")
     public ResponseEntity<Void> assignTaskToClass(@PathVariable Integer classId,
                                                   @PathVariable Integer taskId,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
@@ -93,7 +108,6 @@ public class ClassController {
     }
 
     @DeleteMapping("/{classId}/tasks/{taskId}")
-    @PreAuthorize("hasRole('CURATOR')")
     public ResponseEntity<Void> removeTaskFromClass(@PathVariable Integer classId,
                                                     @PathVariable Integer taskId) {
         taskService.removeTaskFromClass(classId, taskId);

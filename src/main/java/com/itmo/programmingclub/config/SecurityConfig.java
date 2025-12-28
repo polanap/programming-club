@@ -52,8 +52,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Manager endpoints
                         // .requestMatchers("/api/managers/**").hasRole("MANAGER")
                         // .requestMatchers("/api/groups/**").hasRole("MANAGER")
+                        // .requestMatchers("POST", "/api/classes").hasRole("MANAGER")
+                        // .requestMatchers("PUT", "/api/classes/{id}").hasRole("MANAGER")
+                        // .requestMatchers("DELETE", "/api/classes/{id}").hasRole("MANAGER")
+                        // Curator endpoints - must be before general class endpoints
+                        // .requestMatchers("POST", "/api/classes/**/tasks/**").hasRole("CURATOR")
+                        // .requestMatchers("DELETE", "/api/classes/**/tasks/**").hasRole("CURATOR")
+                        // .requestMatchers("POST", "/api/tasks").hasRole("CURATOR")
+                        // .requestMatchers("PUT", "/api/tasks/**").hasRole("CURATOR")
+                        // .requestMatchers("DELETE", "/api/tasks/**").hasRole("CURATOR")
+                        // .requestMatchers("/api/tasks/curator/**").hasRole("CURATOR")
+                        // Authenticated endpoints
+                        // .requestMatchers("POST", "/api/tasks/**/tests").authenticated()
+                        // .requestMatchers("PUT", "/api/tests/**").authenticated()
+                        // .requestMatchers("DELETE", "/api/tests/**").authenticated()
                         .requestMatchers("/api/transfer-request/**").authenticated()
                         .anyRequest().authenticated()
                 )

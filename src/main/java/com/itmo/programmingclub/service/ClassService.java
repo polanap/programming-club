@@ -2,6 +2,7 @@ package com.itmo.programmingclub.service;
 
 import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.DayOfWeek;
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.model.dto.ClassRequestDTO;
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.model.entity.Group;
@@ -58,12 +59,24 @@ public class ClassService {
         return classRepository.findById(id);
     }
 
+    public Optional<Class> findByIdWithTasks(Integer id) {
+        return classRepository.findByIdWithTasks(id);
+    }
+
     public List<Class> findAll() {
         return classRepository.findAll();
     }
 
     public List<Class> findByScheduleId(Integer scheduleId) {
         return classRepository.findByScheduleId(scheduleId);
+    }
+
+    public List<Class> findByGroupId(Integer groupId) {
+        return classRepository.findByGroupId(groupId);
+    }
+
+    public List<Class> findByCuratorId(Integer curatorId) {
+        return classRepository.findByCuratorId(curatorId, RoleEnum.CURATOR);
     }
 
     public Class updateClass(Integer id, ClassRequestDTO dto) {
