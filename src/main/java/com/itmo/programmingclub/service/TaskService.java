@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.dto.TaskDTO;
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.model.entity.Task;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -26,7 +26,7 @@ public class TaskService {
 
     public Task createTask(TaskDTO taskDTO, String username) {
         User author = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         Task task = new Task();
         task.setCondition(taskDTO.getCondition());
         task.setAuthor(author);
@@ -57,7 +57,7 @@ public class TaskService {
 
     public Task updateTask(Integer taskId, TaskDTO taskDTO, String username) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NoSuchElementException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("Task not found"));
         if (!task.getAuthor().getUsername().equals(username)) {
             throw new AccessDeniedException("You can only edit your own tasks");
         }
@@ -70,7 +70,7 @@ public class TaskService {
 
     public void deleteTask(Integer taskId, String username) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NoSuchElementException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("Task not found"));
 
         if (!task.getAuthor().getUsername().equals(username)) {
             throw new AccessDeniedException("You can only delete your own tasks");
@@ -81,13 +81,13 @@ public class TaskService {
 
     public void assignTaskToClass(Integer classId, Integer taskId, String username) {
         com.itmo.programmingclub.model.entity.Class classEntity = classRepository.findById(classId)
-                .orElseThrow(() -> new NoSuchElementException("Class not found"));
+                .orElseThrow(() -> new NotFoundException("Class not found"));
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NoSuchElementException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("Task not found"));
 
         User currentUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         boolean isAuthor = task.getAuthor().getId().equals(currentUser.getId());
         boolean isOpen = Boolean.TRUE.equals(task.getIsOpen());
@@ -102,10 +102,10 @@ public class TaskService {
 
     public void removeTaskFromClass(Integer classId, Integer taskId) {
         Class classEntity = classRepository.findById(classId)
-                .orElseThrow(() -> new NoSuchElementException("Class not found"));
+                .orElseThrow(() -> new NotFoundException("Class not found"));
 
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NoSuchElementException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("Task not found"));
 
         classEntity.removeTask(task);
         classRepository.save(classEntity);

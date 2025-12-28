@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.dto.TestDTO;
 import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.model.entity.Test;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class TestService {
 
     public Test createTest(Integer taskId, TestDTO testDTO, String username) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NoSuchElementException("Task not found"));
+                .orElseThrow(() -> new NotFoundException("Task not found"));
 
         if (!task.getAuthor().getUsername().equals(username)) {
             throw new AccessDeniedException("You can only add tests to your own tasks");
@@ -38,14 +38,14 @@ public class TestService {
 
     public List<Test> getTestsByTaskId(Integer taskId) {
         if (!taskRepository.existsById(taskId)) {
-            throw new NoSuchElementException("Task not found");
+            throw new NotFoundException("Task not found");
         }
         return testRepository.findByTaskId(taskId);
     }
 
     public void deleteTest(Integer testId, String username) {
         Test test = testRepository.findById(testId)
-                .orElseThrow(() -> new NoSuchElementException("Test not found"));
+                .orElseThrow(() -> new NotFoundException("Test not found"));
 
         if (!test.getTask().getAuthor().getUsername().equals(username)) {
             throw new AccessDeniedException("You can only delete tests from your own tasks");
@@ -56,7 +56,7 @@ public class TestService {
 
     public Test updateTest(Integer testId, TestDTO testDTO, String username) {
         Test test = testRepository.findById(testId)
-                .orElseThrow(() -> new NoSuchElementException("Test not found"));
+                .orElseThrow(() -> new NotFoundException("Test not found"));
 
         if (!test.getTask().getAuthor().getUsername().equals(username)) {
             throw new AccessDeniedException("You can only edit tests for your own tasks");

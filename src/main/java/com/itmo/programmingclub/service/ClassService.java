@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.dto.ClassRequestDTO;
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.model.entity.Schedule;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -22,7 +22,7 @@ public class ClassService {
 
     public Class createClass(ClassRequestDTO dto) {
         Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
-                .orElseThrow(() -> new NoSuchElementException("Schedule not found"));
+                .orElseThrow(() -> new NotFoundException("Schedule not found"));
 
         Class classEntity = new Class();
         classEntity.setSchedule(schedule);
@@ -44,10 +44,10 @@ public class ClassService {
 
     public Class updateClass(Integer id, ClassRequestDTO dto) {
         Class classEntity = classRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Class not found"));
+                .orElseThrow(() -> new NotFoundException("Class not found"));
 
         Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
-                .orElseThrow(() -> new NoSuchElementException("Schedule not found"));
+                .orElseThrow(() -> new NotFoundException("Schedule not found"));
 
         classEntity.setSchedule(schedule);
         return classRepository.save(classEntity);
