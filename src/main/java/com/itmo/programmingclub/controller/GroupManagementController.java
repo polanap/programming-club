@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor
@@ -96,7 +94,8 @@ public class GroupManagementController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Schedule schedule = groupManagementService.createSchedule(
-                groupId, 
+                groupId,
+                request.getDayOfWeek(),
                 request.getClassStartTime(), 
                 request.getClassEndTime(),
                 currentUser.getUserId()

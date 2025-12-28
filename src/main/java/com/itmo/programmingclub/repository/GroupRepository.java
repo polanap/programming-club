@@ -9,25 +9,20 @@ import com.itmo.programmingclub.model.entity.Group;
 import com.itmo.programmingclub.model.RoleEnum;
 import java.util.List;
 
-import java.util.List;
-
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Integer> {
-<<<<<<< HEAD
     @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoles ur JOIN ur.user u WHERE u.id = :userId")
     List<Group> findByUserId(@Param("userId") Integer userId);
     
-    @Query("""
-        SELECT DISTINCT g
-        FROM Group g
-        JOIN g.userRoles ur
-        JOIN ur.user u
-        JOIN ur.role r
-        WHERE u.id = :userId AND r.role = :role
-        """)
-    List<Group> findByUserIdAndRole(@Param("userId") Integer userId, @Param("role") RoleEnum role);
-=======
-    @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoleGroups urg JOIN urg.userRole ur JOIN ur.user u WHERE u.id = :userId")
-    List<Group> findByUserId(@Param("userId") Integer userId);
->>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
+    @Query(value = """
+        SELECT DISTINCT g.* FROM app_group g
+        INNER JOIN user_role_group urg ON g.id = urg.group_id
+        INNER JOIN user_role ur ON urg.user_role_id = ur.id
+        INNER JOIN app_role r ON ur.role_id = r.id
+        WHERE ur.user_id = :userId AND r.role = :role
+        """, nativeQuery = true)
+    List<Group> findByUserIdAndRole(@Param("userId") Integer userId, @Param("role") String role);
+    
+    @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoles ur JOIN ur.user u JOIN ur.role r WHERE u.id = :userId AND r.role = :role")
+    List<Group> findByUserIdAndRoleEnum(@Param("userId") Integer userId, @Param("role") RoleEnum role);
 }

@@ -30,10 +30,7 @@ public class UserRole {
     private User user;
 
     @ManyToMany(mappedBy = "userRoles")
-<<<<<<< HEAD
     @JsonIgnore
-=======
->>>>>>> 8b137b0 (Issue #5 Add logic for creating group for manager)
     private Set<Group> groups = new HashSet<>();
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -44,4 +41,3 @@ public class UserRole {
     @JsonIgnore
     private Set<Event> events;
 }
-

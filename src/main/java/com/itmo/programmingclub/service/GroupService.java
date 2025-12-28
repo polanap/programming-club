@@ -33,7 +33,7 @@ public class GroupService {
     }
     
     public List<Group> findByUserIdAndRole(Integer userId, RoleEnum role) {
-        return groupRepository.findByUserIdAndRole(userId, role);
+        return groupRepository.findByUserIdAndRoleEnum(userId, role);
     }
 }
 
