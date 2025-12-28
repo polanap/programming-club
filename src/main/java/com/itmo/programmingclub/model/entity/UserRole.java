@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,12 +30,15 @@ public class UserRole {
     private User user;
 
     @ManyToMany(mappedBy = "userRoles")
+    @JsonIgnore
     private Set<Group> groups = new HashSet<>();
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<UserTeam> userTeams;
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Event> events;
 }
 

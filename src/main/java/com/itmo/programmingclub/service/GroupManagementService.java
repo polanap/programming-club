@@ -46,7 +46,7 @@ public class GroupManagementService {
 //     }
 
     // Check if manager has access to group
-    private void checkManagerAccess(Integer groupId, Integer managerUserId) {
+    void checkManagerAccess(Integer groupId, Integer managerUserId) {
         Group group = groupService.findById(groupId);
         UserRole managerUserRole = userRoleService.findByUserIdAndRole(managerUserId, RoleEnum.MANAGER);
 
@@ -227,6 +227,24 @@ public class GroupManagementService {
                 .isStarted(group.isStarted())
                 .canStart(canStart && !group.isStarted())
                 .build();
+    }
+    
+    // Get users of a group by role
+    public List<com.itmo.programmingclub.model.entity.User> getGroupUsersByRole(Integer groupId, String role, Integer managerUserId) {
+        checkManagerAccess(groupId, managerUserId);
+        Group group = groupService.findById(groupId);
+        RoleEnum roleEnum;
+        try {
+            roleEnum = RoleEnum.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
+        
+        return group.getUserRoles().stream()
+                .filter(ur -> ur.getRole().getRole() == roleEnum)
+                .map(ur -> ur.getUser())
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
     }
 }
 

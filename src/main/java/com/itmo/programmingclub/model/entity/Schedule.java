@@ -1,7 +1,10 @@
 package com.itmo.programmingclub.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+<<<<<<< Updated upstream
 import com.itmo.programmingclub.model.DayOfWeek;
+=======
+>>>>>>> Stashed changes
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

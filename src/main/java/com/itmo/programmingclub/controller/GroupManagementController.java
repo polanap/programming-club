@@ -1,12 +1,15 @@
 package com.itmo.programmingclub.controller;
 
 import com.itmo.programmingclub.exceptions.UnauthorizedException;
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.model.dto.*;
 import com.itmo.programmingclub.model.entity.Group;
 import com.itmo.programmingclub.model.entity.Schedule;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.security.SecurityUtils;
 import com.itmo.programmingclub.service.GroupManagementService;
+import com.itmo.programmingclub.service.GroupService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GroupManagementController {
     private final GroupManagementService groupManagementService;
-
+    private final GroupService groupService;
     // FR6: Create group
     @PostMapping
     public ResponseEntity<Group> createGroup() {
@@ -30,8 +33,6 @@ public class GroupManagementController {
         Group group = groupManagementService.createGroup(currentUser.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(group);
     }
-
-    // TODO:FR7: Get all users with their groups
 
     // Get group details
     @GetMapping("/{groupId}")
@@ -136,6 +137,30 @@ public class GroupManagementController {
         }
         groupManagementService.startGroup(groupId, currentUser.getUserId());
         return ResponseEntity.ok().build();
+    }
+    
+    // Get all groups of current manager
+    @GetMapping("/my")
+    public ResponseEntity<List<Group>> getMyGroups() {
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<Group> groups = groupService.findByUserIdAndRole(currentUser.getUserId(), RoleEnum.MANAGER);
+        return ResponseEntity.ok(groups);
+    }
+    
+    // Get users of a group by role
+    @GetMapping("/{groupId}/users/{role}")
+    public ResponseEntity<List<com.itmo.programmingclub.model.entity.User>> getGroupUsersByRole(
+            @PathVariable Integer groupId,
+            @PathVariable String role) {
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<com.itmo.programmingclub.model.entity.User> users = groupManagementService.getGroupUsersByRole(groupId, role, currentUser.getUserId());
+        return ResponseEntity.ok(users);
     }
 }
 

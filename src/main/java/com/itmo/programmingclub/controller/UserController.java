@@ -51,5 +51,20 @@ public class UserController {
         }
         return ResponseEntity.notFound().build();
     }
+    
+    @GetMapping("/students")
+    public ResponseEntity<List<User>> getAllStudents() {
+        return ResponseEntity.ok(userService.findAllStudents());
+    }
+    
+    @GetMapping("/curators")
+    public ResponseEntity<List<User>> getAllCurators() {
+        return ResponseEntity.ok(userService.findAllCurators());
+    }
+    
+    @GetMapping("/managers")
+    public ResponseEntity<List<User>> getAllManagers() {
+        return ResponseEntity.ok(userService.findAllManagers());
+    }
 }
 

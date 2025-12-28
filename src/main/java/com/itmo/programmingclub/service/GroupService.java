@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.model.entity.Group;
 import com.itmo.programmingclub.repository.GroupRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,10 @@ public class GroupService {
 
     public void deleteGroup(Integer id) {
         groupRepository.deleteById(id);
+    }
+    
+    public List<Group> findByUserIdAndRole(Integer userId, RoleEnum role) {
+        return groupRepository.findByUserIdAndRole(userId, role);
     }
 }
 
