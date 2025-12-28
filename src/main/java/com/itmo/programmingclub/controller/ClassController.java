@@ -1,8 +1,12 @@
 package com.itmo.programmingclub.controller;
 
+import com.itmo.programmingclub.mapper.ClassMapper; // Импорт
+import com.itmo.programmingclub.model.dto.ClassRequestDTO; // Импорт
+import com.itmo.programmingclub.model.dto.ClassResponseDTO; // Импорт
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.service.ClassService;
 import com.itmo.programmingclub.service.TaskService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -19,41 +24,48 @@ import java.util.List;
 public class ClassController {
     private final ClassService classService;
     private final TaskService taskService;
+    private final ClassMapper classMapper; // Внедряем
 
     @GetMapping
-    public ResponseEntity<List<Class>> getAllClasses() {
-        return ResponseEntity.ok(classService.findAll());
+    public ResponseEntity<List<ClassResponseDTO>> getAllClasses() {
+        List<ClassResponseDTO> dtos = classService.findAll().stream()
+                .map(classMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Class> getClassById(@PathVariable Integer id) {
+    public ResponseEntity<ClassResponseDTO> getClassById(@PathVariable Integer id) {
         return classService.findById(id)
+                .map(classMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/schedule/{scheduleId}")
-    public ResponseEntity<List<Class>> getClassesBySchedule(@PathVariable Integer scheduleId) {
-        return ResponseEntity.ok(classService.findByScheduleId(scheduleId));
+    public ResponseEntity<List<ClassResponseDTO>> getClassesBySchedule(@PathVariable Integer scheduleId) {
+        List<ClassResponseDTO> dtos = classService.findByScheduleId(scheduleId).stream()
+                .map(classMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @PostMapping
-    public ResponseEntity<Class> createClass(@RequestBody Class classEntity) {
-        Class created = classService.createClass(classEntity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<ClassResponseDTO> createClass(@Valid @RequestBody ClassRequestDTO dto) {
+        Class created = classService.createClass(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(classMapper.toDto(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Class> updateClass(@PathVariable Integer id, @RequestBody Class classEntity) {
-        return classService.findById(id)
-                .map(existing -> {
-                    classEntity.setId(id);
-                    return ResponseEntity.ok(classService.updateClass(classEntity));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<ClassResponseDTO> updateClass(@PathVariable Integer id, @Valid @RequestBody ClassRequestDTO dto) {
+        Class updated = classService.updateClass(id, dto);
+        return ResponseEntity.ok(classMapper.toDto(updated));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> deleteClass(@PathVariable Integer id) {
         if (classService.findById(id).isPresent()) {
             classService.deleteClass(id);
@@ -79,4 +91,3 @@ public class ClassController {
         return ResponseEntity.noContent().build();
     }
 }
-
