@@ -1,10 +1,15 @@
 package com.itmo.programmingclub.controller;
 
+import com.itmo.programmingclub.model.dto.TeamChangeRequestDTO;
 import com.itmo.programmingclub.model.entity.TeamChangeRequest;
 import com.itmo.programmingclub.service.TeamChangeRequestService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,19 +48,20 @@ public class TeamChangeRequestController {
     }
 
     @PostMapping
-    public ResponseEntity<TeamChangeRequest> createTeamChangeRequest(@RequestBody TeamChangeRequest request) {
-        TeamChangeRequest created = teamChangeRequestService.createTeamChangeRequest(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Void> createTeamChangeRequest(@Valid @RequestBody TeamChangeRequestDTO dto,
+                                                        @AuthenticationPrincipal UserDetails userDetails) {
+        teamChangeRequestService.createTeamChangeRequest(userDetails.getUsername(), dto);
+        return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<TeamChangeRequest> updateTeamChangeRequest(@PathVariable Integer id, @RequestBody TeamChangeRequest request) {
-        return teamChangeRequestService.findById(id)
-                .map(existing -> {
-                    request.setId(id);
-                    return ResponseEntity.ok(teamChangeRequestService.updateTeamChangeRequest(request));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PostMapping("/{requestId}/process")
+    @PreAuthorize("hasRole('CURATOR')")
+    public ResponseEntity<Void> processTeamChangeRequest(@PathVariable Integer requestId,
+                                                         @RequestParam boolean approved,
+                                                         @AuthenticationPrincipal UserDetails userDetails) {
+        teamChangeRequestService.processTeamChangeRequest(requestId, userDetails.getUsername(), approved);
+        return ResponseEntity.ok().build();
     }
 }
 

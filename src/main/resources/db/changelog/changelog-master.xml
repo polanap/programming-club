@@ -8,4 +8,6 @@
     <include file="/db/changelog/changeset/0004-update-schedule-table.sql"/>
     <include file="/db/changelog/changeset/0005-create-class-task-table.sql"/>
     <include file="/db/changelog/changeset/0006-add-class-date.sql"/>
+    <include file="/db/changelog/changeset/0007-add-curator-to-team-request.sql"/>
+    <include file="/db/changelog/changeset/0008-add-teams-to-change-request.sql"/>
 </databaseChangeLog>
