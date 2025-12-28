@@ -603,7 +603,7 @@ const GroupManagement: React.FC = () => {
                 <button
                   className="btn btn-primary"
                   onClick={handleCreateSchedule}
-                  disabled={!scheduleStartTime || !scheduleEndTime}
+                  disabled={!scheduleStartTime || !scheduleEndTime || scheduleStartTime >= scheduleEndTime}
                 >
                   Создать
                 </button>
