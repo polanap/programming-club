@@ -1,0 +1,194 @@
+.container {
+  margin-top: 20px;
+  max-width: 1400px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.errorMessage {
+  color: red;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: #ffe6e6;
+  border-radius: 4px;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+.groupsList {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.groupItem {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &.selected {
+    background-color: #e3f2fd;
+  }
+}
+
+.groupDetails {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.sectionTitle {
+  margin-top: 0;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.startButton {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.modalFormGroup {
+  margin-bottom: 15px;
+}
+
+.modalLabel {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.modalInput {
+  width: 100%;
+  padding: 8px;
+  font-size: 1em;
+}
+
+.modalSelect {
+  width: 100%;
+  padding: 8px;
+  font-size: 1em;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.groupItemStatus {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.groupInfo {
+  margin-bottom: 20px;
+}
+
+.schedulePlaceholder {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 50px;
+}
+
+.schedulePlaceholderText {
+  color: #999;
+}
+
+.scheduleTableContainer {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.scheduleTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scheduleTableHead {
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #ddd;
+}
+
+.scheduleTableHeader {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+
+  &.scheduleTableHeaderActions {
+    text-align: right;
+    width: 100px;
+  }
+}
+
+.scheduleTableRow {
+  border-bottom: 1px solid #eee;
+
+  &:hover {
+    background-color: #f9f9f9;
+  }
+}
+
+.scheduleTableCell {
+  padding: 12px;
+
+  &.scheduleTableCellActions {
+    text-align: right;
+  }
+}
+
+.deleteScheduleButton {
+  padding: 4px 8px;
+  font-size: 0.9em;
+}
+
+.selectGroupMessage {
+  color: #999;
+}
+

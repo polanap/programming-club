@@ -7,7 +7,6 @@ import com.itmo.programmingclub.model.dto.websocket.LineLockMessage;
 import com.itmo.programmingclub.model.entity.Team;
 import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.security.CustomUserDetails;
-import com.itmo.programmingclub.security.SecurityUtils;
 import com.itmo.programmingclub.service.CodeEditorService;
 import com.itmo.programmingclub.service.TeamService;
 import lombok.RequiredArgsConstructor;

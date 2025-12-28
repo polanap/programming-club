@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.itmo.programmingclub.model.entity.User;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -45,5 +46,32 @@ public interface UserRepository extends JpaRepository<User, Integer> {
         WHERE u.id = :userId AND r.role = 'MANAGER'
         """, nativeQuery = true)
     boolean isManager(@Param("userId") Integer userId);
+    
+    @Query(value = """
+        SELECT DISTINCT u.* FROM app_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN app_role r ON ur.role_id = r.id
+        WHERE r.role = 'STUDENT' AND u.is_active = true
+        ORDER BY u.full_name
+        """, nativeQuery = true)
+    List<User> findAllStudents();
+    
+    @Query(value = """
+        SELECT DISTINCT u.* FROM app_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN app_role r ON ur.role_id = r.id
+        WHERE r.role = 'CURATOR' AND u.is_active = true
+        ORDER BY u.full_name
+        """, nativeQuery = true)
+    List<User> findAllCurators();
+    
+    @Query(value = """
+        SELECT DISTINCT u.* FROM app_user u
+        INNER JOIN user_role ur ON u.id = ur.user_id
+        INNER JOIN app_role r ON ur.role_id = r.id
+        WHERE r.role = 'MANAGER' AND u.is_active = true
+        ORDER BY u.full_name
+        """, nativeQuery = true)
+    List<User> findAllManagers();
 }
 

@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.model.dto;
 
+import com.itmo.programmingclub.model.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,6 @@ public class AuthResponse {
     private Integer userId;
     private String username;
     private String email;
-    private List<String> roles;
+    private List<RoleEnum> roles;
 }
 

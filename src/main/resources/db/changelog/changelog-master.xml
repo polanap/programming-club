@@ -5,4 +5,5 @@
     <include file="/db/changelog/changeset/0001-create-tables.sql"/>
     <include file="/db/changelog/changeset/0002-create-functions-with-triggers.sql"/>
     <include file="/db/changelog/changeset/0003-create-indexes.sql"/>
+    <include file="/db/changelog/changeset/0004-update-schedule-table.sql"/>
 </databaseChangeLog>

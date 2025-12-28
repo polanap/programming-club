@@ -3,6 +3,7 @@ package com.itmo.programmingclub;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itmo.programmingclub.model.dto.AuthRequest;
 import com.itmo.programmingclub.model.dto.RegisterRequest;
+import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.model.entity.Role;
 import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.model.entity.UserRole;
@@ -73,7 +74,7 @@ public class AuthIntegrationTest {
 
         Role role = new Role();
         role.setId(1);
-        role.setRole(roleName);
+        role.setRole(RoleEnum.valueOf(roleName));
 
         UserRole userRole = new UserRole();
         userRole.setRole(role);
@@ -97,7 +98,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldRegisterStudentSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("student1", "pass", "s@m.ru", "Name", "STUDENT");
+        RegisterRequest request = new RegisterRequest("student1", "pass", "s@m.ru", "Name", RoleEnum.STUDENT);
         mockUserDoesNotExist();
 
         mockMvc.perform(post("/api/auth/register")
@@ -110,7 +111,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldRegisterCuratorSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("curator1", "pass", "c@m.ru", "Name", "CURATOR");
+        RegisterRequest request = new RegisterRequest("curator1", "pass", "c@m.ru", "Name", RoleEnum.CURATOR);
         mockUserDoesNotExist();
 
         mockMvc.perform(post("/api/auth/register")
@@ -123,7 +124,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldRegisterManagerSuccessfully() throws Exception {
-        RegisterRequest request = new RegisterRequest("manager1", "pass", "m@m.ru", "Name", "MANAGER");
+        RegisterRequest request = new RegisterRequest("manager1", "pass", "m@m.ru", "Name", RoleEnum.MANAGER);
         mockUserDoesNotExist();
 
         mockMvc.perform(post("/api/auth/register")
@@ -136,7 +137,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldFailRegistrationIfUsernameTaken() throws Exception {
-        RegisterRequest request = new RegisterRequest("takenUser", "pass", "new@m.ru", "Name", "STUDENT");
+        RegisterRequest request = new RegisterRequest("takenUser", "pass", "new@m.ru", "Name", RoleEnum.STUDENT);
 
         when(userRepository.existsByUsername("takenUser")).thenReturn(true);
 
@@ -150,7 +151,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldFailRegistrationIfEmailTaken() throws Exception {
-        RegisterRequest request = new RegisterRequest("user", "pass", "taken@m.ru", "Name", "STUDENT");
+        RegisterRequest request = new RegisterRequest("user", "pass", "taken@m.ru", "Name", RoleEnum.STUDENT);
 
         when(userRepository.existsByEmail("taken@m.ru")).thenReturn(true);
 
@@ -163,7 +164,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldFailRegistrationWithEmptyFields() throws Exception {
-        RegisterRequest request = new RegisterRequest("", "pass", "valid@m.ru", "Name", "STUDENT");
+        RegisterRequest request = new RegisterRequest("", "pass", "valid@m.ru", "Name", RoleEnum.STUDENT);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -173,7 +174,7 @@ public class AuthIntegrationTest {
 
     @Test
     void shouldFailRegistrationWithInvalidEmail() throws Exception {
-        RegisterRequest request = new RegisterRequest("user", "pass", "not-an-email", "Name", "STUDENT");
+        RegisterRequest request = new RegisterRequest("user", "pass", "not-an-email", "Name", RoleEnum.STUDENT);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -265,7 +266,7 @@ public class AuthIntegrationTest {
                 "password123",
                 "valid@mail.ru",
                 "Ivan Ivanov",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -283,7 +284,7 @@ public class AuthIntegrationTest {
                 "pass\tword",
                 "valid@mail.ru",
                 "Ivan Ivanov",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -301,7 +302,7 @@ public class AuthIntegrationTest {
                 "password123",
                 "te\nst@mail.ru",
                 "Ivan Ivanov",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -318,7 +319,7 @@ public class AuthIntegrationTest {
                 "password123",
                 "test@mail.ru ",
                 "Ivan Ivanov",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -334,7 +335,7 @@ public class AuthIntegrationTest {
                 "password123",
                 "valid@mail.ru",
                 "Ivan777",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
@@ -351,7 +352,7 @@ public class AuthIntegrationTest {
                 "password123",
                 "valid@mail.ru",
                 "Ivan_Ivanov",
-                "STUDENT"
+                RoleEnum.STUDENT
         );
 
         mockMvc.perform(post("/api/auth/register")
