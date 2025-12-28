@@ -11,7 +11,6 @@ import com.itmo.programmingclub.model.dto.*;
 import com.itmo.programmingclub.model.entity.Schedule;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.security.SecurityUtils;
-import com.itmo.programmingclub.service.GroupManagementService;
 
 import org.springframework.http.HttpStatus;
 
@@ -21,7 +20,6 @@ import java.util.List;
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor
 public class GroupController {
-    private final GroupManagementService groupManagementService;
     private final GroupService groupService;
     // FR6: Create group
     @PostMapping
@@ -30,7 +28,7 @@ public class GroupController {
         if (currentUser == null) {
             throw new UnauthorizedException("User is not authenticated");
         }
-        Group group = groupManagementService.createGroup(currentUser.getUserId());
+        Group group = groupService.createGroup(currentUser.getUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(group);
     }
     // Get group details
@@ -40,7 +38,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        GroupResponse response = groupManagementService.getGroupDetails(groupId, currentUser.getUserId());
+        GroupResponse response = groupService.getGroupDetails(groupId, currentUser.getUserId());
         return ResponseEntity.ok(response);
     }
 
@@ -51,7 +49,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.addStudentToGroup(groupId, request.getUserId(), currentUser.getUserId());
+        groupService.addStudentToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -62,7 +60,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.removeStudentFromGroup(groupId, studentUserId, currentUser.getUserId());
+        groupService.removeStudentFromGroup(groupId, studentUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -73,7 +71,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.addCuratorToGroup(groupId, request.getUserId(), currentUser.getUserId());
+        groupService.addCuratorToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -84,7 +82,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.removeCuratorFromGroup(groupId, curatorUserId, currentUser.getUserId());
+        groupService.removeCuratorFromGroup(groupId, curatorUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -95,7 +93,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Schedule schedule = groupManagementService.createSchedule(
+        Schedule schedule = groupService.createSchedule(
                 groupId,
                 request.getDayOfWeek(),
                 request.getClassStartTime(), 
@@ -112,7 +110,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.deleteSchedule(groupId, scheduleId, currentUser.getUserId());
+        groupService.deleteSchedule(groupId, scheduleId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -123,7 +121,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.addManagerToGroup(groupId, request.getUserId(), currentUser.getUserId());
+        groupService.addManagerToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -134,7 +132,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.removeManagerFromGroup(groupId, managerUserId, currentUser.getUserId());
+        groupService.removeManagerFromGroup(groupId, managerUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
 
@@ -145,7 +143,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        groupManagementService.startGroup(groupId, currentUser.getUserId());
+        groupService.startGroup(groupId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
     
@@ -169,7 +167,7 @@ public class GroupController {
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<com.itmo.programmingclub.model.entity.User> users = groupManagementService.getGroupUsersByRole(groupId, role, currentUser.getUserId());
+        List<com.itmo.programmingclub.model.entity.User> users = groupService.getGroupUsersByRole(groupId, role, currentUser.getUserId());
         return ResponseEntity.ok(users);
     }
 
