@@ -3,6 +3,7 @@ package com.itmo.programmingclub.model.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import com.itmo.programmingclub.model.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,6 @@ public class RegisterRequest {
     @NotBlank(message = "Full name cannot be empty")
     @Pattern(regexp = "^[a-zA-Zа-яА-ЯёЁ\\s'-]+$", message = "Full name can only contain letters, spaces, hyphens and apostrophes")
     private String fullName;
-
-    private String role; // STUDENT, CURATOR, MANAGER
+    private RoleEnum role;
 }
 

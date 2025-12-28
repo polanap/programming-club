@@ -1,0 +1,55 @@
+.emptyContainer {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 100px;
+}
+
+.emptyMessage {
+  color: #999;
+}
+
+.tableContainer {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHead {
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #ddd;
+}
+
+.tableHeader {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+
+  &.rightAlign {
+    text-align: right;
+    width: 100px;
+  }
+}
+
+.tableRow {
+  border-bottom: 1px solid #eee;
+}
+
+.tableCell {
+  padding: 12px;
+
+  &.rightAlign {
+    text-align: right;
+  }
+}
+
+.removeButton {
+  padding: 4px 8px;
+  font-size: 0.9em;
+}
+

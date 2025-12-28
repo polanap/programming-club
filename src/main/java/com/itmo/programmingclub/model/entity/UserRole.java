@@ -1,11 +1,13 @@
 package com.itmo.programmingclub.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -27,13 +29,15 @@ public class UserRole {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserRoleGroup> userRoleGroups;
+    @ManyToMany(mappedBy = "userRoles")
+    @JsonIgnore
+    private Set<Group> groups = new HashSet<>();
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Set<UserTeam> userTeams;
 
     @OneToMany(mappedBy = "userRole", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Set<Event> events;
 }
-

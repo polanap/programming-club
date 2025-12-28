@@ -86,6 +86,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(new ErrorMessageResponse(message));
     }
+    public ResponseEntity<ErrorMessageResponse> handleUnauthorizedException(UnauthorizedException e) {
+        return ResponseEntity.status(401).body(createAndLogError(e.getMessage(), e));
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorMessageResponse> handleNotFoundException(NotFoundException e) {
+        return ResponseEntity.status(404).body(createAndLogError(e.getMessage(), e));
+    }
 
     @ExceptionHandler
     public ResponseEntity<ErrorMessageResponse> handleAccessDeniedException(AccessDeniedException e) {

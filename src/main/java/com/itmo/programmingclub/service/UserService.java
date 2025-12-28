@@ -50,5 +50,17 @@ public class UserService {
     public void deleteUser(Integer id) {
         userRepository.deleteById(id);
     }
+    
+    public List<User> findAllStudents() {
+        return userRepository.findAllStudents();
+    }
+    
+    public List<User> findAllCurators() {
+        return userRepository.findAllCurators();
+    }
+    
+    public List<User> findAllManagers() {
+        return userRepository.findAllManagers();
+    }
 }
 
