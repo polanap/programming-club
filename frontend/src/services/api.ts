@@ -85,6 +85,8 @@ export const groupAPI = {
     api.delete(`/groups/${groupId}/managers/${managerUserId}`),
   createSchedule: (groupId: number, scheduleData: CreateScheduleRequest): Promise<AxiosResponse<any>> => 
     api.post(`/groups/${groupId}/schedules`, scheduleData),
+  deleteSchedule: (groupId: number, scheduleId: number): Promise<AxiosResponse<void>> => 
+    api.delete(`/groups/${groupId}/schedules/${scheduleId}`),
   startGroup: (groupId: number): Promise<AxiosResponse<void>> => api.post(`/groups/${groupId}/start`),
   getGroupUsersByRole: (groupId: number, role: string): Promise<AxiosResponse<User[]>> => 
     api.get(`/groups/${groupId}/users/${role}`),

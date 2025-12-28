@@ -105,6 +105,17 @@ public class GroupController {
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(schedule);
     }
+    
+    // Delete schedule from group
+    @DeleteMapping("/{groupId}/schedules/{scheduleId}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Integer groupId, @PathVariable Integer scheduleId) {
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        groupManagementService.deleteSchedule(groupId, scheduleId, currentUser.getUserId());
+        return ResponseEntity.ok().build();
+    }
 
     // FR13: Add manager to group
     @PostMapping("/{groupId}/managers")

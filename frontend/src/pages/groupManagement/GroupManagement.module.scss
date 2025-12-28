@@ -160,6 +160,11 @@
   text-align: left;
   border-bottom: 1px solid #ddd;
   font-weight: 600;
+
+  &.scheduleTableHeaderActions {
+    text-align: right;
+    width: 100px;
+  }
 }
 
 .scheduleTableRow {
@@ -172,6 +177,15 @@
 
 .scheduleTableCell {
   padding: 12px;
+
+  &.scheduleTableCellActions {
+    text-align: right;
+  }
+}
+
+.deleteScheduleButton {
+  padding: 4px 8px;
+  font-size: 0.9em;
 }
 
 .selectGroupMessage {

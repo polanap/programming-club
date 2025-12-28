@@ -138,6 +138,27 @@ public class GroupManagementService {
         
         Group group = groupService.findById(groupId);
         
+        // Validate time range
+        if (classStartTime.isAfter(classEndTime) || classStartTime.equals(classEndTime)) {
+            throw new IllegalArgumentException("Start time must be before end time");
+        }
+        
+        // Check for overlapping schedules on the same day
+        List<Schedule> existingSchedules = scheduleRepository.findByGroupIdAndIsRelevantTrue(groupId);
+        for (Schedule existing : existingSchedules) {
+            if (existing.getDayOfWeek() == dayOfWeek) {
+                // Check if time intervals overlap
+                // Two intervals overlap if: start1 < end2 && start2 < end1
+                if (classStartTime.isBefore(existing.getClassEndTime()) && 
+                    existing.getClassStartTime().isBefore(classEndTime)) {
+                    throw new IllegalArgumentException(
+                        String.format("Schedule overlaps with existing schedule on %s: %s - %s", 
+                            dayOfWeek, existing.getClassStartTime(), existing.getClassEndTime())
+                    );
+                }
+            }
+        }
+        
         Schedule schedule = new Schedule();
         schedule.setDayOfWeek(dayOfWeek);
         schedule.setClassStartTime(classStartTime);
@@ -146,6 +167,21 @@ public class GroupManagementService {
         schedule.setGroup(group);
         
         return scheduleRepository.save(schedule);
+    }
+    
+    // Delete schedule from group
+    public void deleteSchedule(Integer groupId, Integer scheduleId, Integer managerUserId) {
+        checkManagerAccess(groupId, managerUserId);
+        
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found"));
+        
+        // Verify that schedule belongs to the group
+        if (!schedule.getGroup().getId().equals(groupId)) {
+            throw new IllegalArgumentException("Schedule does not belong to this group");
+        }
+        
+        scheduleRepository.delete(schedule);
     }
 
     // FR13: Add manager to group
@@ -211,15 +247,15 @@ public class GroupManagementService {
         
         Group group = groupService.findById(groupId);
         
-        long studentCount = group.getUserRoles().stream()
-                .filter(ur -> ur.getRole().getRole() == RoleEnum.STUDENT)
+        long managerCount = group.getUserRoles().stream()
+                .filter(ur -> ur.getRole().getRole() == RoleEnum.MANAGER)
                 .count();
         long curatorCount = group.getUserRoles().stream()
                 .filter(ur -> ur.getRole().getRole() == RoleEnum.CURATOR)
                 .count();
         List<Schedule> schedules = scheduleRepository.findByGroupIdAndIsRelevantTrue(groupId);
         
-        boolean canStart = studentCount >= 1 && curatorCount >= 1 && !schedules.isEmpty();
+        boolean canStart = curatorCount >= 1 && managerCount >= 1 && !schedules.isEmpty();
         
         return GroupResponse.builder()
                 .id(group.getId())

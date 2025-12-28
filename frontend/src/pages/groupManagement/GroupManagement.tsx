@@ -185,10 +185,30 @@ const GroupManagement: React.FC = () => {
       setScheduleEndTime('');
       alert('Расписание успешно создано');
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка создания расписания');
+      const errorMessage = err.response?.data?.errorMessage || err.response?.data?.message || 'Ошибка создания расписания';
+      alert(errorMessage);
       console.error('Error creating schedule:', err);
     }
   }, [scheduleStartTime, scheduleEndTime, scheduleDayOfWeek, selectedGroup, loadGroupDetails, loadGroupSchedules]);
+
+  const handleDeleteSchedule = useCallback(async (scheduleId: number) => {
+    if (!selectedGroup) return;
+    
+    if (!window.confirm('Вы уверены, что хотите удалить это расписание?')) {
+      return;
+    }
+
+    try {
+      await groupAPI.deleteSchedule(selectedGroup.id, scheduleId);
+      await loadGroupSchedules(selectedGroup.id);
+      await loadGroupDetails(selectedGroup.id);
+      alert('Расписание успешно удалено');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.errorMessage || err.response?.data?.message || 'Ошибка удаления расписания';
+      alert(errorMessage);
+      console.error('Error deleting schedule:', err);
+    }
+  }, [selectedGroup, loadGroupSchedules, loadGroupDetails]);
 
   const handleStartGroup = useCallback(async () => {
     if (!window.confirm('Вы уверены, что хотите запустить эту группу?')) {
@@ -346,7 +366,7 @@ const GroupManagement: React.FC = () => {
                   <>
                     <div className={`${styles.section} ${styles.groupInfo}`}>
                       <p><strong>Статус:</strong> {groupDetails.isStarted ? 'Запущена' : 'Не запущена'}</p>
-                      {groupDetails.startTime && (
+                      {groupDetails.isStarted && groupDetails.startTime && (
                         <p><strong>Время запуска:</strong> {formatDate(groupDetails.startTime)}</p>
                       )}
                       {!groupDetails.isStarted && (
@@ -438,6 +458,9 @@ const GroupManagement: React.FC = () => {
                                 <th className={styles.scheduleTableHeader}>День недели</th>
                                 <th className={styles.scheduleTableHeader}>Время начала</th>
                                 <th className={styles.scheduleTableHeader}>Время окончания</th>
+                                {!groupDetails.isStarted && (
+                                  <th className={`${styles.scheduleTableHeader} ${styles.scheduleTableHeaderActions}`}>Действия</th>
+                                )}
                               </tr>
                             </thead>
                             <tbody>
@@ -446,6 +469,16 @@ const GroupManagement: React.FC = () => {
                                   <td className={styles.scheduleTableCell}>{formatDayOfWeek(schedule.dayOfWeek)}</td>
                                   <td className={styles.scheduleTableCell}>{formatTime(schedule.classStartTime)}</td>
                                   <td className={styles.scheduleTableCell}>{formatTime(schedule.classEndTime)}</td>
+                                  {!groupDetails.isStarted && (
+                                    <td className={`${styles.scheduleTableCell} ${styles.scheduleTableCellActions}`}>
+                                      <button
+                                        className={`btn ${styles.deleteScheduleButton}`}
+                                        onClick={() => handleDeleteSchedule(schedule.id)}
+                                      >
+                                        Удалить
+                                      </button>
+                                    </td>
+                                  )}
                                 </tr>
                               ))}
                             </tbody>
