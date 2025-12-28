@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -56,16 +55,16 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
+    // FR19: Curator can create tasks
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> createTask(@Valid @RequestBody TaskDTO taskDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         Task createdTask = taskService.createTask(taskDTO, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(taskMapper.toDto(createdTask));
     }
 
+    // FR20: Curator can edit their own tasks
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDTO> updateTask(@PathVariable Integer id,
                                                       @Valid @RequestBody TaskDTO taskDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
@@ -73,12 +72,42 @@ public class TaskController {
         return ResponseEntity.ok(taskMapper.toDto(updatedTask));
     }
 
+    // FR20: Curator can delete their own tasks
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer id,
                                            @AuthenticationPrincipal UserDetails userDetails) {
         taskService.deleteTask(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    // Get tasks available for curator (their own tasks + open tasks)
+    @GetMapping("/curator/available")
+    public ResponseEntity<List<TaskResponseDTO>> getAvailableTasksForCurator(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Get current user ID from CustomUserDetails
+        com.itmo.programmingclub.security.CustomUserDetails customUserDetails = 
+            (com.itmo.programmingclub.security.CustomUserDetails) userDetails;
+        Integer curatorId = customUserDetails.getUserId();
+        
+        List<TaskResponseDTO> tasks = taskService.findAvailableTasksForCurator(curatorId).stream()
+                .map(taskMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(tasks);
+    }
+
+    // Get curator's own tasks
+    @GetMapping("/curator/my")
+    public ResponseEntity<List<TaskResponseDTO>> getMyTasks(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Get current user ID from CustomUserDetails
+        com.itmo.programmingclub.security.CustomUserDetails customUserDetails = 
+            (com.itmo.programmingclub.security.CustomUserDetails) userDetails;
+        Integer curatorId = customUserDetails.getUserId();
+        
+        List<TaskResponseDTO> tasks = taskService.findByAuthorId(curatorId).stream()
+                .map(taskMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(tasks);
     }
 }
 

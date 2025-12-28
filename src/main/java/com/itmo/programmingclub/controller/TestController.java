@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +25,6 @@ public class TestController {
     private final TestMapper testMapper;
 
     @PostMapping("/tasks/{taskId}/tests")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TestResponseDTO> createTest(@PathVariable Integer taskId,
                                                       @Valid @RequestBody TestDTO testDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
@@ -48,7 +46,6 @@ public class TestController {
     }
 
     @PutMapping("/tests/{testId}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TestResponseDTO> updateTest(@PathVariable Integer testId,
                                                       @Valid @RequestBody TestDTO testDTO,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
@@ -57,7 +54,6 @@ public class TestController {
     }
 
     @DeleteMapping("/tests/{testId}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteTest(@PathVariable Integer testId,
                                            @AuthenticationPrincipal UserDetails userDetails) {
         testService.deleteTest(testId, userDetails.getUsername());
