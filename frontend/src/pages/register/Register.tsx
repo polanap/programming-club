@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { RegisterRequest, RoleEnum } from '../../types';
 import styles from './Register.module.scss';
-import '../App.css';
+import '../../App.css';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<RegisterRequest>({

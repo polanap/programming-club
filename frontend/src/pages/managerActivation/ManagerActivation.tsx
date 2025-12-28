@@ -3,7 +3,7 @@ import { managerAPI } from '../../services/api';
 import Header from '../../components/header/Header';
 import { InactiveManager, PageResponse } from '../../types';
 import styles from './ManagerActivation.module.scss';
-import '../App.css';
+import '../../App.css';
 
 const ManagerActivation: React.FC = () => {
   const [managers, setManagers] = useState<InactiveManager[]>([]);

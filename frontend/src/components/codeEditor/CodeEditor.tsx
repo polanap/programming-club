@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
-import { CodeChangeMessage, LockMessage, LineLock, AuthUser } from '../types';
+import { CodeChangeMessage, LockMessage, LineLock, AuthUser } from '../../types';
 import styles from './CodeEditor.module.scss';
 
 interface CodeEditorProps {

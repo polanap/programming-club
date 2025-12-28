@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/header/Header';
-import { classAPI } from '../services/api';
-import { Class } from '../types';
+import Header from '../../../components/header/Header';
+import { classAPI } from '../../../services/api';
+import { Class } from '../../../types';
 import styles from './StudentDashboard.module.scss';
 
 const StudentDashboard: React.FC = () => {

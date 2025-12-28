@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { RoleEnum } from '../../types';
 import styles from './Header.module.scss';
-import '../App.css';
+import '../../App.css';
 
 const Header: React.FC = () => {
   const authContext = useContext(AuthContext);

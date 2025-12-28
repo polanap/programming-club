@@ -5,7 +5,7 @@ import UsersTable from '../../components/userTable/UsersTable';
 import { groupAPI, userAPI } from '../../services/api';
 import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType } from '../../types';
 import styles from './GroupManagement.module.scss';
-import '../App.css';
+import '../../App.css';
 
 const getUserTypeName = (type: UserType | null): string => {
   const names: Record<string, string> = {
@@ -293,7 +293,7 @@ const GroupManagement: React.FC = () => {
                   >
                     <div><strong>Группа #{group.id}</strong></div>
                     <div style={{ fontSize: '0.9em', color: '#666' }}>
-                      {group.startTime && new Date(group.startTime).getFullYear() < 2100 ? 'Запущена' : 'Не запущена'}
+                      {new Date(group.startTime) < new Date() ? 'Запущена' : 'Не запущена'}
                     </div>
                   </div>
                 ))}
