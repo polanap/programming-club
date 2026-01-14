@@ -31,7 +31,7 @@ const Header: React.FC = () => {
 
   return (
     <div className={styles.header}>
-      <h1>Программистский клуб</h1>
+      <h1>Кружок по программированию</h1>
       <div className={styles.headerActions}>
         {user && (
           <>
