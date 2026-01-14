@@ -1,5 +1,7 @@
 package com.itmo.programmingclub.repository;
 
+import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,5 +18,7 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Integer> {
     List<UserRole> findByUserId(@Param("userId") Integer userId);
     
     Optional<UserRole> findByUserIdAndRoleId(Integer userId, Integer roleId);
+
+    Optional<UserRole> findByUser_UsernameAndRole_Role(String username, RoleEnum role);
 }
 
