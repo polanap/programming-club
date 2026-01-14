@@ -25,13 +25,13 @@ const ManagerDashboard: React.FC = () => {
 
       const user: AuthUser = JSON.parse(userStr);
       const [groupsRes, usersRes, requestsRes] = await Promise.all([
-        groupAPI.getMyGroups(),
+        groupAPI.getMyManagerGroups(),
         userAPI.getAll(),
-        transferRequestAPI.getByManager(user.id).catch(() => ({ data: [] })),
+        transferRequestAPI.getMyManagerRequests().catch(() => ({ data: [] })),
       ]);
       setGroups(groupsRes.data);
       setUsers(usersRes.data);
-      setTransferRequests(requestsRes.data || []);
+      setTransferRequests(Array.isArray(requestsRes.data) ? requestsRes.data : []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -71,7 +71,7 @@ const ManagerDashboard: React.FC = () => {
           
           <div className={styles.dashboardCard} onClick={() => navigate('/manager/transfer-requests')}>
             <h3>Заявки на перевод</h3>
-            <p>Новых заявок: {transferRequests.filter(r => r.status === 'NEW').length}</p>
+            <p>Новых заявок: {Array.isArray(transferRequests) ? transferRequests.filter(r => r.status === 'NEW').length : 0}</p>
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/manager/activation')}>
