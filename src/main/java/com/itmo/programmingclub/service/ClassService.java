@@ -28,6 +28,7 @@ import java.util.Optional;
 public class ClassService {
     private final ClassRepository classRepository;
     private final ScheduleRepository scheduleRepository;
+    private final TeamDistributionService teamDistributionService;
 
     public Class createClass(ClassRequestDTO dto) {
         Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
@@ -47,7 +48,10 @@ public class ClassService {
         classEntity.setSchedule(schedule);
         classEntity.setClassDate(classDate);
 
-        return classRepository.save(classEntity);
+        Class savedClass = classRepository.save(classEntity);
+        teamDistributionService.generateTeamsForClass(savedClass);
+
+        return savedClass;
     }
 
     public Optional<Class> findById(Integer id) {
