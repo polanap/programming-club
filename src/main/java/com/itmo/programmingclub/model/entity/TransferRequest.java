@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.model.entity;
 
+import com.itmo.programmingclub.model.TransferRequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,10 @@ public class TransferRequest {
     @JoinColumn(name = "curator_id")
     private UserRole curator;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "source_group_id", nullable = false)
+    private Group sourceGroup;
+
     @Column(name = "curators_comment", columnDefinition = "TEXT")
     private String curatorsComment;
 
@@ -49,7 +54,7 @@ public class TransferRequest {
     private OffsetDateTime closingTime;
 
     @OneToMany(mappedBy = "transferRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<AvailableGroup> availableGroups;
+    private Set<AvailableGroup> availableGroups = new java.util.HashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -59,13 +64,6 @@ public class TransferRequest {
         if (status == null) {
             status = TransferRequestStatus.NEW;
         }
-    }
-
-    public enum TransferRequestStatus {
-        APPROVED,
-        REJECTED,
-        NEW,
-        UNDER_CONSIDERATION
     }
 }
 

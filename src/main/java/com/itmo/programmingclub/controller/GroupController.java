@@ -1,28 +1,42 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.model.RoleEnum;
-import com.itmo.programmingclub.model.entity.Group;
-import com.itmo.programmingclub.service.GroupService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.itmo.programmingclub.exceptions.UnauthorizedException;
-import com.itmo.programmingclub.model.dto.*;
-import com.itmo.programmingclub.model.entity.Schedule;
-import com.itmo.programmingclub.security.CustomUserDetails;
-import com.itmo.programmingclub.security.SecurityUtils;
-
-import org.springframework.http.HttpStatus;
-
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.itmo.programmingclub.exceptions.UnauthorizedException;
+import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.dto.AddUserToGroupRequest;
+import com.itmo.programmingclub.model.dto.CreateScheduleRequest;
+import com.itmo.programmingclub.model.dto.GroupResponse;
+import com.itmo.programmingclub.model.entity.Group;
+import com.itmo.programmingclub.model.entity.Schedule;
+import com.itmo.programmingclub.model.entity.User;
+import com.itmo.programmingclub.security.CustomUserDetails;
+import com.itmo.programmingclub.security.SecurityUtils;
+import com.itmo.programmingclub.service.GroupService;
+
+import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor
 public class GroupController {
     private final GroupService groupService;
+    private final Logger logger = LoggerFactory.getLogger(GroupController.class);
     // FR6: Create group
     @PostMapping
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Group> createGroup() {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
@@ -33,10 +47,11 @@ public class GroupController {
     }
     // Get group details
     @GetMapping("/{groupId}")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CURATOR', 'STUDENT')")
     public ResponseEntity<GroupResponse> getGroupDetails(@PathVariable Integer groupId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         GroupResponse response = groupService.getGroupDetails(groupId, currentUser.getUserId());
         return ResponseEntity.ok(response);
@@ -44,10 +59,11 @@ public class GroupController {
 
     // FR8: Add student to group
     @PostMapping("/{groupId}/students")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> addStudentToGroup(@PathVariable Integer groupId, @RequestBody AddUserToGroupRequest request) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.addStudentToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -55,10 +71,11 @@ public class GroupController {
 
     // FR9: Remove student from group
     @DeleteMapping("/{groupId}/students/{studentUserId}")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> removeStudentFromGroup(@PathVariable Integer groupId, @PathVariable Integer studentUserId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.removeStudentFromGroup(groupId, studentUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -66,10 +83,11 @@ public class GroupController {
 
     // FR10: Add curator to group
     @PostMapping("/{groupId}/curators")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> addCuratorToGroup(@PathVariable Integer groupId, @RequestBody AddUserToGroupRequest request) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.addCuratorToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -77,10 +95,11 @@ public class GroupController {
 
     // FR11: Remove curator from group
     @DeleteMapping("/{groupId}/curators/{curatorUserId}")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> removeCuratorFromGroup(@PathVariable Integer groupId, @PathVariable Integer curatorUserId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.removeCuratorFromGroup(groupId, curatorUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -88,10 +107,11 @@ public class GroupController {
 
     // FR12: Create schedule for group
     @PostMapping("/{groupId}/schedules")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Schedule> createSchedule(@PathVariable Integer groupId, @RequestBody CreateScheduleRequest request) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         Schedule schedule = groupService.createSchedule(
                 groupId,
@@ -105,10 +125,11 @@ public class GroupController {
     
     // Delete schedule from group
     @DeleteMapping("/{groupId}/schedules/{scheduleId}")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Integer groupId, @PathVariable Integer scheduleId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.deleteSchedule(groupId, scheduleId, currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -116,10 +137,11 @@ public class GroupController {
 
     // FR13: Add manager to group
     @PostMapping("/{groupId}/managers")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> addManagerToGroup(@PathVariable Integer groupId, @RequestBody AddUserToGroupRequest request) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.addManagerToGroup(groupId, request.getUserId(), currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -127,10 +149,11 @@ public class GroupController {
 
     // FR13: Remove manager from group
     @DeleteMapping("/{groupId}/managers/{managerUserId}")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> removeManagerFromGroup(@PathVariable Integer groupId, @PathVariable Integer managerUserId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.removeManagerFromGroup(groupId, managerUserId, currentUser.getUserId());
         return ResponseEntity.ok().build();
@@ -138,40 +161,71 @@ public class GroupController {
 
     // FR14: Start group
     @PostMapping("/{groupId}/start")
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<Void> startGroup(@PathVariable Integer groupId) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
         groupService.startGroup(groupId, currentUser.getUserId());
         return ResponseEntity.ok().build();
     }
     
     // Get all groups of current manager
-    @GetMapping("/my")
-    public ResponseEntity<List<Group>> getMyGroups() {
+    @GetMapping("manager/my")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<Group>> getManagersGroups() {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
+        logger.info("Getting groups for user: {}", currentUser.getUserId());
         List<Group> groups = groupService.findByUserIdAndRole(currentUser.getUserId(), RoleEnum.MANAGER);
         return ResponseEntity.ok(groups);
     }
+
+        // Get all groups of current curator
+    @GetMapping("curator/my")
+    @PreAuthorize("hasRole('CURATOR')")
+    public ResponseEntity<List<Group>> getCuratorsGroups() {
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new UnauthorizedException("User is not authenticated");
+        }
+        logger.info("Getting groups for user: {}", currentUser.getUserId());
+        List<Group> groups = groupService.findByUserIdAndRole(currentUser.getUserId(), RoleEnum.CURATOR);
+        return ResponseEntity.ok(groups);
+    }
+
+    // Get all groups of current student
+    @GetMapping("student/my")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<Group>> getStudentsGroups() {
+    CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null) {
+        throw new UnauthorizedException("User is not authenticated");
+    }
+    logger.info("Getting groups for user: {}", currentUser.getUserId());
+    List<Group> groups = groupService.findByUserIdAndRole(currentUser.getUserId(), RoleEnum.STUDENT);
+    return ResponseEntity.ok(groups);
+}
+
     
     // Get users of a group by role
     @GetMapping("/{groupId}/users/{role}")
-    public ResponseEntity<List<com.itmo.programmingclub.model.entity.User>> getGroupUsersByRole(
+    @PreAuthorize("hasAnyRole('MANAGER', 'CURATOR', 'STUDENT')")
+    public ResponseEntity<List<User>> getGroupUsersByRole(
             @PathVariable Integer groupId,
             @PathVariable String role) {
         CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
         if (currentUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            throw new UnauthorizedException("User is not authenticated");
         }
-        List<com.itmo.programmingclub.model.entity.User> users = groupService.getGroupUsersByRole(groupId, role, currentUser.getUserId());
+        List<User> users = groupService.getGroupUsersByRole(groupId, role, currentUser.getUserId());
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/list")
+    @GetMapping()
     public ResponseEntity<List<Group>> getAllGroups() {
         return ResponseEntity.ok(groupService.findAll());
     }
@@ -186,6 +240,16 @@ public class GroupController {
             @PathVariable Integer userId,
             @PathVariable RoleEnum role) {
         return ResponseEntity.ok(groupService.findByUserIdAndRole(userId, role));
+    }
+
+    @GetMapping("/not-member/{studentUserRoleId}")
+    @PreAuthorize("hasRole('MANAGER')")
+    public ResponseEntity<List<Group>> getGroupsWhereStudentNotMember(@PathVariable Integer studentUserRoleId) {
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null) {
+            throw new UnauthorizedException("User is not authenticated");
+        }
+        return ResponseEntity.ok(groupService.findGroupsWhereStudentNotMember(studentUserRoleId));
     }
 }
 
