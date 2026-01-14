@@ -1,10 +1,13 @@
 package com.itmo.programmingclub.controller;
 
+import com.itmo.programmingclub.mapper.TeamMapper;
+import com.itmo.programmingclub.model.dto.TeamResponseDTO;
 import com.itmo.programmingclub.model.entity.Team;
 import com.itmo.programmingclub.service.TeamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TeamController {
     private final TeamService teamService;
+    private final TeamMapper teamMapper;
 
     @GetMapping
     public ResponseEntity<List<Team>> getAllTeams() {
@@ -28,8 +32,12 @@ public class TeamController {
     }
 
     @GetMapping("/class/{classId}")
-    public ResponseEntity<List<Team>> getTeamsByClass(@PathVariable Integer classId) {
-        return ResponseEntity.ok(teamService.findByClassId(classId));
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<TeamResponseDTO>> getTeamsByClass(@PathVariable Integer classId) {
+        List<TeamResponseDTO> teams = teamService.findByClassId(classId).stream()
+                .map(teamMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(teams);
     }
 
     @PostMapping
