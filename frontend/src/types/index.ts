@@ -44,6 +44,13 @@ export interface Schedule {
   isRelevant: boolean;
 }
 
+export interface ClassResponseDTO {
+  id: number;
+  scheduleId: number;
+  classDate: string; // ISO date (yyyy-mm-dd)
+  tasks?: Task[]; // backend sends TaskResponseDTO; we only need ids/condition in UI (optional)
+}
+
 export interface Task {
   id: number;
   condition: string;
@@ -56,6 +63,70 @@ export interface Team {
   id: number;
   classId: number;
   elderId: number;
+}
+
+// FR28: Team distribution view
+export interface TeamMemberDTO {
+  userRoleId: number;
+  userId: number;
+  fullName: string;
+  username: string;
+}
+
+export interface TeamResponseDTO {
+  teamId: number;
+  elder: TeamMemberDTO | null;
+  members: TeamMemberDTO[];
+}
+
+// FR18/FR29: Team change requests
+export type TeamChangeRequestStatus = 'NEW' | 'APPROVED' | 'REJECTED';
+
+export interface TeamChangeRequestDTO {
+  toTeamId: number;
+  comment?: string;
+}
+
+export interface TeamChangeRequest {
+  id: number;
+  student: {
+    id: number;
+    user: User;
+  };
+  curator?: {
+    id: number;
+    user: User;
+  };
+  comment?: string;
+  status: TeamChangeRequestStatus;
+  creationTime: string;
+  closingTime?: string;
+  fromTeam?: { id: number };
+  toTeam?: { id: number };
+}
+
+// FR30: Elder change requests
+export type ElderChangeRequestStatus = 'NEW' | 'APPROVED' | 'REJECTED';
+
+export interface ElderChangeRequestDTO {
+  newElderId: number; // UserRole ID
+  comment?: string;
+}
+
+export interface ElderChangeRequest {
+  id: number;
+  student: {
+    id: number;
+    user: User;
+  };
+  newElder: {
+    id: number;
+    user: User;
+  };
+  comment?: string;
+  status: ElderChangeRequestStatus;
+  creationTime: string;
+  closingTime?: string;
 }
 
 export interface Class {

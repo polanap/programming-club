@@ -1,5 +1,22 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { User, Group, GroupResponse, CreateScheduleRequest, TransferRequest, CreateTransferRequestDTO, AddAvailableGroupsDTO, SelectGroupDTO, CuratorCommentDTO } from '../types';
+import {
+  User,
+  Group,
+  GroupResponse,
+  CreateScheduleRequest,
+  TransferRequest,
+  CreateTransferRequestDTO,
+  AddAvailableGroupsDTO,
+  SelectGroupDTO,
+  CuratorCommentDTO,
+  Schedule,
+  ClassResponseDTO,
+  TeamResponseDTO,
+  TeamChangeRequest,
+  TeamChangeRequestDTO,
+  ElderChangeRequest,
+  ElderChangeRequestDTO,
+} from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8181/api';
 
@@ -110,11 +127,11 @@ export const taskAPI = {
 };
 
 export const classAPI = {
-  getAll: (): Promise<AxiosResponse<any[]>> => api.get('/classes'),
-  getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/classes/${id}`),
-  getBySchedule: (scheduleId: number): Promise<AxiosResponse<any[]>> => api.get(`/classes/schedule/${scheduleId}`),
-  getByGroup: (groupId: number): Promise<AxiosResponse<any[]>> => api.get(`/classes/group/${groupId}`),
-  getMyClasses: (): Promise<AxiosResponse<any[]>> => api.get('/classes/curator/my'),
+  getAll: (): Promise<AxiosResponse<ClassResponseDTO[]>> => api.get('/classes'),
+  getById: (id: number): Promise<AxiosResponse<ClassResponseDTO>> => api.get(`/classes/${id}`),
+  getBySchedule: (scheduleId: number): Promise<AxiosResponse<ClassResponseDTO[]>> => api.get(`/classes/schedule/${scheduleId}`),
+  getByGroup: (groupId: number): Promise<AxiosResponse<ClassResponseDTO[]>> => api.get(`/classes/group/${groupId}`),
+  getMyClasses: (): Promise<AxiosResponse<ClassResponseDTO[]>> => api.get('/classes/curator/my'),
   assignTask: (classId: number, taskId: number): Promise<AxiosResponse<void>> => 
     api.post(`/classes/${classId}/tasks/${taskId}`),
   removeTask: (classId: number, taskId: number): Promise<AxiosResponse<void>> => 
@@ -124,14 +141,14 @@ export const classAPI = {
 export const teamAPI = {
   getAll: (): Promise<AxiosResponse<any[]>> => api.get('/teams'),
   getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/teams/${id}`),
-  getByClass: (classId: number): Promise<AxiosResponse<any[]>> => api.get(`/teams/class/${classId}`),
+  getByClass: (classId: number): Promise<AxiosResponse<TeamResponseDTO[]>> => api.get(`/teams/class/${classId}`),
 };
 
 export const scheduleAPI = {
-  getAll: (): Promise<AxiosResponse<any[]>> => api.get('/schedules'),
-  getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/schedules/${id}`),
-  getByGroup: (groupId: number): Promise<AxiosResponse<any[]>> => api.get(`/schedules/group/${groupId}`),
-  getRelevantByGroup: (groupId: number): Promise<AxiosResponse<any[]>> => api.get(`/schedules/group/${groupId}/relevant`),
+  getAll: (): Promise<AxiosResponse<Schedule[]>> => api.get('/schedules'),
+  getById: (id: number): Promise<AxiosResponse<Schedule>> => api.get(`/schedules/${id}`),
+  getByGroup: (groupId: number): Promise<AxiosResponse<Schedule[]>> => api.get(`/schedules/group/${groupId}`),
+  getRelevantByGroup: (groupId: number): Promise<AxiosResponse<Schedule[]>> => api.get(`/schedules/group/${groupId}/relevant`),
   create: (schedule: any): Promise<AxiosResponse<any>> => api.post('/schedules', schedule),
   update: (id: number, schedule: any): Promise<AxiosResponse<any>> => api.put(`/schedules/${id}`, schedule),
 };
@@ -179,17 +196,17 @@ export const transferRequestAPI = {
 };
 
 export const teamChangeRequestAPI = {
-  getAll: (): Promise<AxiosResponse<any[]>> => api.get('/team-change-requests'),
-  getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/team-change-requests/${id}`),
-  create: (request: any): Promise<AxiosResponse<any>> => api.post('/team-change-requests', request),
-  update: (id: number, request: any): Promise<AxiosResponse<any>> => api.put(`/team-change-requests/${id}`, request),
+  getAll: (): Promise<AxiosResponse<TeamChangeRequest[]>> => api.get('/team-change-requests'),
+  getById: (id: number): Promise<AxiosResponse<TeamChangeRequest>> => api.get(`/team-change-requests/${id}`),
+  create: (dto: TeamChangeRequestDTO): Promise<AxiosResponse<void>> => api.post('/team-change-requests', dto),
+  process: (requestId: number, approved: boolean): Promise<AxiosResponse<void>> =>
+    api.post(`/team-change-requests/${requestId}/process`, null, { params: { approved } }),
 };
 
 export const elderChangeRequestAPI = {
-  getAll: (): Promise<AxiosResponse<any[]>> => api.get('/elder-change-requests'),
-  getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/elder-change-requests/${id}`),
-  create: (request: any): Promise<AxiosResponse<any>> => api.post('/elder-change-requests', request),
-  update: (id: number, request: any): Promise<AxiosResponse<any>> => api.put(`/elder-change-requests/${id}`, request),
+  getAll: (): Promise<AxiosResponse<ElderChangeRequest[]>> => api.get('/elder-change-requests'),
+  getById: (id: number): Promise<AxiosResponse<ElderChangeRequest>> => api.get(`/elder-change-requests/${id}`),
+  create: (dto: ElderChangeRequestDTO): Promise<AxiosResponse<void>> => api.post('/elder-change-requests', dto),
 };
 
 export const managerAPI = {
