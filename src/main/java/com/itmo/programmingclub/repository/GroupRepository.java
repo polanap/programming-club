@@ -1,13 +1,14 @@
 package com.itmo.programmingclub.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.itmo.programmingclub.model.entity.Group;
 import com.itmo.programmingclub.model.RoleEnum;
-import java.util.List;
+import com.itmo.programmingclub.model.entity.Group;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Integer> {
@@ -25,4 +26,8 @@ public interface GroupRepository extends JpaRepository<Group, Integer> {
     
     @Query("SELECT DISTINCT g FROM Group g JOIN g.userRoles ur JOIN ur.user u JOIN ur.role r WHERE u.id = :userId AND r.role = :role")
     List<Group> findByUserIdAndRoleEnum(@Param("userId") Integer userId, @Param("role") RoleEnum role);
+    
+    @Query("SELECT DISTINCT g FROM Group g WHERE g.id NOT IN " +
+           "(SELECT DISTINCT g2.id FROM Group g2 JOIN g2.userRoles ur WHERE ur.id = :studentUserRoleId)")
+    List<Group> findGroupsWhereStudentNotMember(@Param("studentUserRoleId") Integer studentUserRoleId);
 }

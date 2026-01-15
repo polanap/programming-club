@@ -19,7 +19,7 @@ const CuratorDashboard: React.FC = () => {
       const user: AuthUser = JSON.parse(userStr);
       const [tasksRes, groupsRes] = await Promise.all([
         taskAPI.getByAuthor(user.id).catch(() => ({ data: [] })),
-        groupAPI.getMyGroups().catch(() => ({ data: [] })),
+        groupAPI.getMyManagerGroups().catch(() => ({ data: [] })),
       ]);
       setTasks(tasksRes.data || []);
       setGroups(groupsRes.data || []);
@@ -62,6 +62,11 @@ const CuratorDashboard: React.FC = () => {
           
           <div className={styles.dashboardCard} onClick={() => navigate('/curator/team-change-requests')}>
             <h3>Заявки на смену команды</h3>
+          </div>
+          
+          <div className={styles.dashboardCard} onClick={() => navigate('/curator/transfer-requests')}>
+            <h3>Заявки на разъяснение перевода</h3>
+            <p>Разъяснение причин перевода учеников</p>
           </div>
         </div>
       </div>

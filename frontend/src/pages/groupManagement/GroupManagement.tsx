@@ -39,7 +39,7 @@ const GroupManagement: React.FC = () => {
       setLoading(true);
       setError('');
       const [groupsRes, studentsRes, curatorsRes, managersRes] = await Promise.all([
-        groupAPI.getMyGroups(),
+        groupAPI.getMyManagerGroups(),
         userAPI.getAllStudents().catch(() => ({ data: [] })),
         userAPI.getAllCurators().catch(() => ({ data: [] })),
         userAPI.getAllManagers().catch(() => ({ data: [] })),
@@ -364,7 +364,7 @@ const GroupManagement: React.FC = () => {
                 <h3 className={styles.sectionTitle}>Группа #{selectedGroup.id}</h3>
                 {groupDetails && (
                   <>
-                    <div className={`${styles.section} ${styles.groupInfo}`}>
+                    {/* <div className={`${styles.section} ${styles.groupInfo}`}>
                       <p><strong>Статус:</strong> {groupDetails.isStarted ? 'Запущена' : 'Не запущена'}</p>
                       {groupDetails.isStarted && groupDetails.startTime && (
                         <p><strong>Время запуска:</strong> {formatDate(groupDetails.startTime)}</p>
@@ -372,7 +372,7 @@ const GroupManagement: React.FC = () => {
                       {!groupDetails.isStarted && (
                         <p><strong>Можно запустить:</strong> {groupDetails.canStart ? 'Да' : 'Нет'}</p>
                       )}
-                    </div>
+                    </div> */}
 
                     {/* Students */}
                     <div className={styles.section}>

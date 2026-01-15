@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { User, Group, GroupResponse, CreateScheduleRequest } from '../types';
+import { User, Group, GroupResponse, CreateScheduleRequest, TransferRequest, CreateTransferRequestDTO, AddAvailableGroupsDTO, SelectGroupDTO, CuratorCommentDTO } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8181/api';
 
@@ -69,7 +69,9 @@ export const groupAPI = {
   delete: (id: number): Promise<AxiosResponse<void>> => api.delete(`/groups/${id}`),
   // Group management endpoints
   createGroup: (): Promise<AxiosResponse<Group>> => api.post('/groups'),
-  getMyGroups: (): Promise<AxiosResponse<Group[]>> => api.get('/groups/my'),
+  getMyManagerGroups: (): Promise<AxiosResponse<Group[]>> => api.get('/groups/manager/my'),
+  getMyCuratorGroups: (): Promise<AxiosResponse<Group[]>> => api.get('/groups/curator/my'),
+  getMyStudentGroups: (): Promise<AxiosResponse<Group[]>> => api.get('/groups/student/my'),
   getGroupDetails: (groupId: number): Promise<AxiosResponse<GroupResponse>> => api.get(`/groups/${groupId}`),
   addStudent: (groupId: number, userId: number): Promise<AxiosResponse<void>> => 
     api.post(`/groups/${groupId}/students`, { userId, role: 'STUDENT' }),
@@ -90,6 +92,8 @@ export const groupAPI = {
   startGroup: (groupId: number): Promise<AxiosResponse<void>> => api.post(`/groups/${groupId}/start`),
   getGroupUsersByRole: (groupId: number, role: string): Promise<AxiosResponse<User[]>> => 
     api.get(`/groups/${groupId}/users/${role}`),
+  getGroupsWhereStudentNotMember: (studentUserRoleId: number): Promise<AxiosResponse<Group[]>> => 
+    api.get(`/groups/not-member/${studentUserRoleId}`),
 };
 
 export const taskAPI = {
@@ -124,12 +128,45 @@ export const scheduleAPI = {
 };
 
 export const transferRequestAPI = {
-  getAll: (): Promise<AxiosResponse<any[]>> => api.get('/transfer-requests'),
-  getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/transfer-requests/${id}`),
-  getByStudent: (studentId: number): Promise<AxiosResponse<any[]>> => api.get(`/transfer-requests/student/${studentId}`),
-  getByManager: (managerId: number): Promise<AxiosResponse<any[]>> => api.get(`/transfer-requests/manager/${managerId}`),
-  create: (request: any): Promise<AxiosResponse<any>> => api.post('/transfer-requests', request),
-  update: (id: number, request: any): Promise<AxiosResponse<any>> => api.put(`/transfer-requests/${id}`, request),
+  // Common endpoints
+  getAll: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request'),
+  getById: (id: number): Promise<AxiosResponse<TransferRequest>> => api.get(`/transfer-request/${id}`),
+  getByStatus: (status: string): Promise<AxiosResponse<TransferRequest[]>> => api.get(`/transfer-request/status/${status}`),
+  changeStatus: (status: string, requestId: number): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/status/${status}`, null, { params: { requestId } }),
+  
+  // Student endpoints
+  create: (dto: CreateTransferRequestDTO): Promise<AxiosResponse<TransferRequest>> => 
+    api.post('/transfer-request', dto),
+  getMyRequests: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request/my'),
+  selectGroup: (requestId: number, dto: SelectGroupDTO): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/${requestId}/select-group`, dto),
+  withdraw: (requestId: number): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/${requestId}/withdraw`),
+  
+  // Manager endpoints
+  getUnassigned: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request/unassigned'),
+  takeRequest: (requestId: number): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/${requestId}/take`),
+  getMyManagerRequests: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request/my-manager'),
+  requestClarification: (requestId: number, curatorId: number): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/${requestId}/request-clarification`, { curatorId }),
+  getGroupCurators: (requestId: number): Promise<AxiosResponse<any[]>> => 
+    api.get(`/transfer-request/${requestId}/curators`),
+  addAvailableGroups: (dto: AddAvailableGroupsDTO): Promise<AxiosResponse<TransferRequest>> => 
+    api.post('/transfer-request/add-groups', dto),
+  
+  // Curator endpoints
+  getMyCuratorRequests: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request/curator/my'),
+  getCuratorPendingRequests: (): Promise<AxiosResponse<TransferRequest[]>> => api.get('/transfer-request/curator/pending'),
+  addCuratorComment: (requestId: number, dto: CuratorCommentDTO): Promise<AxiosResponse<TransferRequest>> => 
+    api.post(`/transfer-request/${requestId}/curator-comment`, dto),
+  
+  // Legacy endpoints (for backward compatibility)
+  getByStudent: (studentId: number): Promise<AxiosResponse<TransferRequest[]>> => 
+    api.get(`/transfer-request/student/${studentId}`),
+  getByManager: (managerId: number): Promise<AxiosResponse<TransferRequest[]>> => 
+    api.get(`/transfer-request/manager/${managerId}`),
 };
 
 export const teamChangeRequestAPI = {
