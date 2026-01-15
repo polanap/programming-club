@@ -20,11 +20,13 @@ public class TeamController {
     private final TeamMapper teamMapper;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Team>> getAllTeams() {
         return ResponseEntity.ok(teamService.findAll());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Team> getTeamById(@PathVariable Integer id) {
         return teamService.findById(id)
                 .map(ResponseEntity::ok)
@@ -41,12 +43,14 @@ public class TeamController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('CURATOR') or hasRole('MANAGER')")
     public ResponseEntity<Team> createTeam(@RequestBody Team team) {
         Team created = teamService.createTeam(team);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('CURATOR') or hasRole('MANAGER')")
     public ResponseEntity<Team> updateTeam(@PathVariable Integer id, @RequestBody Team team) {
         return teamService.findById(id)
                 .map(existing -> {
@@ -57,6 +61,7 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('CURATOR') or hasRole('MANAGER')")
     public ResponseEntity<Void> deleteTeam(@PathVariable Integer id) {
         if (teamService.findById(id).isPresent()) {
             teamService.deleteTeam(id);

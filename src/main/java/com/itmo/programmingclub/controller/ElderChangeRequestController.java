@@ -54,15 +54,5 @@ public class ElderChangeRequestController {
         elderChangeRequestService.createElderChangeRequest(userDetails.getUsername(), dto);
         return ResponseEntity.ok().build();
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ElderChangeRequest> updateElderChangeRequest(@PathVariable Integer id, @RequestBody ElderChangeRequest request) {
-        return elderChangeRequestService.findById(id)
-                .map(existing -> {
-                    request.setId(id);
-                    return ResponseEntity.ok(elderChangeRequestService.updateElderChangeRequest(request));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
 }
 

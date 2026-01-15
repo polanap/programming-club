@@ -22,6 +22,9 @@ public class TeamChangeRequestService {
     private final UserRoleRepository userRoleRepository;
     private final UserTeamRepository userTeamRepository;
     private final UserRepository userRepository;
+    private final ElderChangeRequestService elderChangeRequestService;
+
+    private final ZoneId zoneId;
 
     public void createTeamChangeRequest(String username, TeamChangeRequestDTO dto) {
         UserRole studentRole = getUserRole(username, "STUDENT");
@@ -81,6 +84,9 @@ public class TeamChangeRequestService {
             userTeamRepository.deleteById(oldId);
         }
 
+        // Отклоняем реквесты, когда студент перешёл в другую группу
+        elderChangeRequestService.cancelRequestsForStudent(studentRole.getId());
+
         UserTeam newMembership = new UserTeam();
         newMembership.setId(new UserTeam.UserTeamId(studentRole.getId(), toTeam.getId()));
         newMembership.setUserRole(studentRole);
@@ -107,17 +113,16 @@ public class TeamChangeRequestService {
                 .orElseThrow(() -> new AccessDeniedException("User " + username + " does not have role " + requiredRoleName));
     }
 
+    private boolean isClassStarted(Schedule schedule, ZonedDateTime now) {
+        if (schedule.getDayOfWeek().name().equals(now.getDayOfWeek().name())) {
+            return !now.toLocalTime().isBefore(schedule.getClassStartTime());
+        }
+        return false;
+    }
+
     private void validateRequestTime(Schedule schedule) {
-        ZoneId zone = ZoneId.of("Europe/Moscow");
-        ZonedDateTime now = ZonedDateTime.now(zone);
-
-        DayOfWeek currentDay = now.getDayOfWeek();
-        LocalTime currentTime = now.toLocalTime();
-
-        if (schedule.getDayOfWeek().name().equals(currentDay.name())) {
-            if (!currentTime.isBefore(schedule.getClassStartTime())) {
-                throw new IllegalArgumentException("Cannot change team: The class has already started.");
-            }
+        if (isClassStarted(schedule, ZonedDateTime.now(zoneId))) {
+            throw new IllegalArgumentException("Cannot change team: The class has already started.");
         }
     }
 

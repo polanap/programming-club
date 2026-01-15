@@ -25,6 +25,20 @@ public class ElderChangeRequestService {
     private final UserRoleRepository userRoleRepository;
     private final TeamRepository teamRepository;
 
+    private final ZoneId zoneId;
+
+    public void cancelRequestsForStudent(Integer studentId) {
+        List<ElderChangeRequest> activeRequests = elderChangeRequestRepository.findByStudentId(studentId).stream()
+                .filter(r -> r.getStatus() == ElderChangeRequest.RequestStatus.NEW)
+                .toList();
+
+        for (ElderChangeRequest req : activeRequests) {
+            req.setStatus(ElderChangeRequest.RequestStatus.REJECTED);
+            req.setClosingTime(OffsetDateTime.now());
+            elderChangeRequestRepository.save(req);
+        }
+    }
+
     public void createElderChangeRequest(String username, ElderChangeRequestDTO dto) {
         UserRole student = userRoleRepository.findByUser_UsernameAndRole_Role(username, RoleEnum.STUDENT)
                 .orElseThrow(() -> new AccessDeniedException("User " + username + " does not have role STUDENT"));
@@ -100,13 +114,16 @@ public class ElderChangeRequestService {
         }
     }
 
-    private void validateRequestTime(Schedule schedule) {
-        ZoneId zone = ZoneId.of("Europe/Moscow");
-        ZonedDateTime now = ZonedDateTime.now(zone);
+    private boolean isClassStarted(Schedule schedule, ZonedDateTime now) {
         if (schedule.getDayOfWeek().name().equals(now.getDayOfWeek().name())) {
-            if (!now.toLocalTime().isBefore(schedule.getClassStartTime())) {
-                throw new IllegalArgumentException("Cannot change elder: The class has already started.");
-            }
+            return !now.toLocalTime().isBefore(schedule.getClassStartTime());
+        }
+        return false;
+    }
+
+    private void validateRequestTime(Schedule schedule) {
+        if (isClassStarted(schedule, ZonedDateTime.now(zoneId))) {
+            throw new IllegalArgumentException("Cannot change elder: The class has already started.");
         }
     }
 
