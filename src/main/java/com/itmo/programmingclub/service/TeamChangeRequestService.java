@@ -5,6 +5,8 @@ import com.itmo.programmingclub.model.dto.TeamChangeRequestDTO;
 import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class TeamChangeRequestService {
     private final TeamChangeRequestRepository teamChangeRequestRepository;
     private final TeamRepository teamRepository;
@@ -25,6 +28,28 @@ public class TeamChangeRequestService {
     private final ElderChangeRequestService elderChangeRequestService;
 
     private final ZoneId zoneId;
+
+    @Scheduled(fixedRateString = "${app.schedule.check-rate}")
+    public void closeExpiredRequests() {
+        log.info("Scheduler: Checking for expired TeamChangeRequests...");
+
+        List<TeamChangeRequest> activeRequests = teamChangeRequestRepository.findByStatus(TeamChangeRequest.RequestStatus.NEW);
+
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+
+        for (TeamChangeRequest req : activeRequests) {
+            Schedule schedule = req.getFromTeam().getClassEntity().getSchedule();
+
+            if (isClassStarted(schedule, now)) {
+                log.info("Request {} expired. Class started at {}", req.getId(), schedule.getClassStartTime());
+
+                req.setStatus(TeamChangeRequest.RequestStatus.REJECTED);
+                req.setClosingTime(OffsetDateTime.now());
+
+                teamChangeRequestRepository.save(req);
+            }
+        }
+    }
 
     public void createTeamChangeRequest(String username, TeamChangeRequestDTO dto) {
         UserRole studentRole = getUserRole(username, "STUDENT");

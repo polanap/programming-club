@@ -6,6 +6,8 @@ import com.itmo.programmingclub.model.dto.ElderChangeRequestDTO;
 import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ElderChangeRequestService {
     private final ElderChangeRequestRepository elderChangeRequestRepository;
     private final UserTeamRepository userTeamRepository;
@@ -26,6 +29,30 @@ public class ElderChangeRequestService {
     private final TeamRepository teamRepository;
 
     private final ZoneId zoneId;
+
+    @Scheduled(fixedRateString = "${app.schedule.check-rate}")
+    public void closeExpiredRequests() {
+        log.info("Scheduler: Checking for expired ElderChangeRequests...");
+
+        List<ElderChangeRequest> activeRequests = elderChangeRequestRepository.findByStatus(ElderChangeRequest.RequestStatus.NEW);
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+
+        for (ElderChangeRequest req : activeRequests) {
+            userTeamRepository.findTopByUserRole_IdOrderByTeam_IdDesc(req.getStudent().getId())
+                    .ifPresent(userTeam -> {
+                        Schedule schedule = userTeam.getTeam().getClassEntity().getSchedule();
+
+                        if (isClassStarted(schedule, now)) {
+                            log.info("Elder Request {} expired.", req.getId());
+
+                            req.setStatus(ElderChangeRequest.RequestStatus.REJECTED);
+                            req.setClosingTime(OffsetDateTime.now());
+
+                            elderChangeRequestRepository.save(req);
+                        }
+                    });
+        }
+    }
 
     public void cancelRequestsForStudent(Integer studentId) {
         List<ElderChangeRequest> activeRequests = elderChangeRequestRepository.findByStudentId(studentId).stream()
