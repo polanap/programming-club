@@ -148,3 +148,73 @@ export interface PageResponse<T> {
   size: number;
   number: number;
 }
+
+export enum TransferRequestStatus {
+  NEW = 'NEW',
+  UNDER_CONSIDERATION = 'UNDER_CONSIDERATION',
+  WAITING_REASONS = 'WAITING_REASONS',
+  REASON_RECEIVED = 'REASON_RECEIVED',
+  GROUP_SEARCH = 'GROUP_SEARCH',
+  GROUP_FOUND = 'GROUP_FOUND',
+  TRANSFERRED = 'TRANSFERRED',
+  REJECTED = 'REJECTED'
+}
+
+export interface TransferRequest {
+  id: number;
+  student: {
+    id: number;
+    user: User;
+    role: {
+      id: number;
+      role: RoleEnum;
+    };
+  };
+  manager?: {
+    id: number;
+    user: User;
+    role: {
+      id: number;
+      role: RoleEnum;
+    };
+  };
+  curator?: {
+    id: number;
+    user: User;
+    role: {
+      id: number;
+      role: RoleEnum;
+    };
+  };
+  sourceGroup: Group;
+  reason: string;
+  curatorsComment?: string;
+  status: TransferRequestStatus;
+  creationTime: string;
+  closingTime?: string;
+  availableGroups?: AvailableGroup[];
+}
+
+export interface AvailableGroup {
+  id: number;
+  group: Group;
+  approved: boolean;
+}
+
+export interface CreateTransferRequestDTO {
+  reason: string;
+  sourceGroupId: number;
+}
+
+export interface AddAvailableGroupsDTO {
+  requestId: number;
+  groupIds: number[];
+}
+
+export interface SelectGroupDTO {
+  groupId: number;
+}
+
+export interface CuratorCommentDTO {
+  comment: string;
+}

@@ -1,21 +1,25 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.model.RoleEnum;
-import com.itmo.programmingclub.model.entity.Group;
-import com.itmo.programmingclub.repository.GroupRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.itmo.programmingclub.exceptions.NotFoundException;
-import com.itmo.programmingclub.model.dto.GroupResponse;
-import com.itmo.programmingclub.model.entity.*;
-import com.itmo.programmingclub.model.DayOfWeek;
-import com.itmo.programmingclub.repository.*;
-
-import java.time.OffsetDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.itmo.programmingclub.exceptions.NotFoundException;
+import com.itmo.programmingclub.model.DayOfWeek;
+import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.dto.GroupResponse;
+import com.itmo.programmingclub.model.entity.Group;
+import com.itmo.programmingclub.model.entity.Schedule;
+import com.itmo.programmingclub.model.entity.User;
+import com.itmo.programmingclub.model.entity.UserRole;
+import com.itmo.programmingclub.repository.GroupRepository;
+import com.itmo.programmingclub.repository.ScheduleRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +48,10 @@ public class GroupService {
     
     public List<Group> findByUserIdAndRole(Integer userId, RoleEnum role) {
         return groupRepository.findByUserIdAndRoleEnum(userId, role);
+    }
+
+    public List<Group> findGroupsWhereStudentNotMember(Integer studentUserRoleId) {
+        return groupRepository.findGroupsWhereStudentNotMember(studentUserRoleId);
     }
 
     // FR6: Create group (not started)
@@ -291,7 +299,7 @@ public class GroupService {
     }
     
     // Get users of a group by role
-    public List<com.itmo.programmingclub.model.entity.User> getGroupUsersByRole(Integer groupId, String role, Integer managerUserId) {
+    public List<User> getGroupUsersByRole(Integer groupId, String role, Integer managerUserId) {
         checkManagerAccess(groupId, managerUserId);
         Group group = findById(groupId);
         RoleEnum roleEnum;

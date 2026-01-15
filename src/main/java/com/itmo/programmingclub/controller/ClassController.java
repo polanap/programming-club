@@ -1,22 +1,31 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.mapper.ClassMapper; // Импорт
-import com.itmo.programmingclub.model.dto.ClassRequestDTO; // Импорт
-import com.itmo.programmingclub.model.dto.ClassResponseDTO; // Импорт
-import com.itmo.programmingclub.model.entity.Class;
-import com.itmo.programmingclub.service.ClassService;
-import com.itmo.programmingclub.service.TaskService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.itmo.programmingclub.mapper.ClassMapper;
+import com.itmo.programmingclub.model.dto.ClassRequestDTO;
+import com.itmo.programmingclub.model.dto.ClassResponseDTO;
+import com.itmo.programmingclub.model.entity.Class;
+import com.itmo.programmingclub.service.ClassService;
+import com.itmo.programmingclub.service.TaskService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -24,7 +33,7 @@ import java.util.stream.Collectors;
 public class ClassController {
     private final ClassService classService;
     private final TaskService taskService;
-    private final ClassMapper classMapper; // Внедряем
+    private final ClassMapper classMapper;
 
     @GetMapping
     public ResponseEntity<List<ClassResponseDTO>> getAllClasses() {
