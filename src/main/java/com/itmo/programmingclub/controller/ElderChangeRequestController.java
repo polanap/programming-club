@@ -1,10 +1,15 @@
 package com.itmo.programmingclub.controller;
 
+import com.itmo.programmingclub.model.dto.ElderChangeRequestDTO;
 import com.itmo.programmingclub.model.entity.ElderChangeRequest;
 import com.itmo.programmingclub.service.ElderChangeRequestService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,19 +48,11 @@ public class ElderChangeRequestController {
     }
 
     @PostMapping
-    public ResponseEntity<ElderChangeRequest> createElderChangeRequest(@RequestBody ElderChangeRequest request) {
-        ElderChangeRequest created = elderChangeRequestService.createElderChangeRequest(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<ElderChangeRequest> updateElderChangeRequest(@PathVariable Integer id, @RequestBody ElderChangeRequest request) {
-        return elderChangeRequestService.findById(id)
-                .map(existing -> {
-                    request.setId(id);
-                    return ResponseEntity.ok(elderChangeRequestService.updateElderChangeRequest(request));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Void> createRequest(@Valid @RequestBody ElderChangeRequestDTO dto,
+                                              @AuthenticationPrincipal UserDetails userDetails) {
+        elderChangeRequestService.createElderChangeRequest(userDetails.getUsername(), dto);
+        return ResponseEntity.ok().build();
     }
 }
 

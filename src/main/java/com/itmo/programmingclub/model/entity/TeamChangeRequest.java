@@ -1,10 +1,7 @@
 package com.itmo.programmingclub.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.OffsetDateTime;
 
@@ -14,6 +11,7 @@ import java.time.OffsetDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TeamChangeRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +33,18 @@ public class TeamChangeRequest {
 
     @Column(name = "closing_time")
     private OffsetDateTime closingTime;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curator_id")
+    private UserRole curator;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_team_id")
+    private Team fromTeam;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_team_id")
+    private Team toTeam;
 
     @PrePersist
     protected void onCreate() {
