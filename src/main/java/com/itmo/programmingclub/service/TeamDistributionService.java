@@ -26,6 +26,11 @@ public class TeamDistributionService {
     private final UserTeamRepository userTeamRepository;
 
     public void generateTeamsForClass(Class classEntity) {
+        // Avoid regenerating teams if they already exist for this class
+        if (classEntity.getId() != null && !teamRepository.findByClassEntityId(classEntity.getId()).isEmpty()) {
+            return;
+        }
+
         Integer groupId = classEntity.getSchedule().getGroup().getId();
 
         List<UserRole> allStudents = userRoleRepository.findByGroups_Id(groupId).stream()

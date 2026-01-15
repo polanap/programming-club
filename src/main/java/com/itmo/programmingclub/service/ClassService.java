@@ -164,7 +164,9 @@ public class ClassService {
             Class classEntity = new Class();
             classEntity.setSchedule(schedule);
             classEntity.setClassDate(classDate);
-            classRepository.save(classEntity);
+            Class saved = classRepository.save(classEntity);
+            // Generate team distribution for the created class
+            teamDistributionService.generateTeamsForClass(saved);
             classesCreated++;
             
             log.debug("Created class for schedule {} on date {}", schedule.getId(), classDate);
