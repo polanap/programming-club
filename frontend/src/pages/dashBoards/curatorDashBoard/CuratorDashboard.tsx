@@ -19,7 +19,7 @@ const CuratorDashboard: React.FC = () => {
       const user: AuthUser = JSON.parse(userStr);
       const [tasksRes, groupsRes] = await Promise.all([
         taskAPI.getByAuthor(user.id).catch(() => ({ data: [] })),
-        groupAPI.getMyManagerGroups().catch(() => ({ data: [] })),
+        groupAPI.getMyCuratorGroups().catch(() => ({ data: [] })),
       ]);
       setTasks(tasksRes.data || []);
       setGroups(groupsRes.data || []);

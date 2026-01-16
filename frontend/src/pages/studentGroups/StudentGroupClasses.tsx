@@ -293,8 +293,14 @@ const StudentGroupClasses: React.FC = () => {
             </div>
 
             <div className={styles.requestDetails} style={{ marginTop: 15 }}>
-              <p><strong>Моя команда:</strong> {myTeam ? `#${myTeam.teamId}` : 'Не назначена'}</p>
-              <p><strong>Староста:</strong> {myTeam?.elder?.fullName || '—'}</p>
+              {loadingTeams ? (
+                <p>Загрузка информации о команде...</p>
+              ) : (
+                <>
+                  <p><strong>Моя команда:</strong> {myTeam ? `#${myTeam.teamId}` : 'Не назначена'}</p>
+                  <p><strong>Староста:</strong> {myTeam?.elder?.fullName || '—'}</p>
+                </>
+              )}
               <div className={styles.requestActions}>
                 <button
                   className={styles.buttonSecondary}

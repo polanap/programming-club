@@ -2,6 +2,8 @@ package com.itmo.programmingclub.service;
 
 import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.dto.TeamChangeRequestDTO;
+import com.itmo.programmingclub.model.dto.TeamChangeRequestResponseDTO;
+import com.itmo.programmingclub.model.dto.UserRoleDTO;
 import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,20 +154,74 @@ public class TeamChangeRequestService {
         }
     }
 
-    public Optional<TeamChangeRequest> findById(Integer id) {
-        return teamChangeRequestRepository.findById(id);
+    public Optional<TeamChangeRequestResponseDTO> findById(Integer id) {
+        return teamChangeRequestRepository.findById(id)
+                .map(this::toDTO);
     }
 
-    public List<TeamChangeRequest> findAll() {
-        return teamChangeRequestRepository.findAll();
+    public List<TeamChangeRequestResponseDTO> findAll() {
+        return teamChangeRequestRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<TeamChangeRequest> findByStudentId(Integer studentId) {
-        return teamChangeRequestRepository.findByStudentId(studentId);
+    public List<TeamChangeRequestResponseDTO> findByStudentId(Integer studentId) {
+        return teamChangeRequestRepository.findByStudentId(studentId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<TeamChangeRequest> findByStatus(TeamChangeRequest.RequestStatus status) {
-        return teamChangeRequestRepository.findByStatus(status);
+    public List<TeamChangeRequestResponseDTO> findByStatus(TeamChangeRequest.RequestStatus status) {
+        return teamChangeRequestRepository.findByStatus(status).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    private TeamChangeRequestResponseDTO toDTO(TeamChangeRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        UserRole student = request.getStudent();
+        UserRole curator = request.getCurator();
+        Team fromTeam = request.getFromTeam();
+        Team toTeam = request.getToTeam();
+
+        return TeamChangeRequestResponseDTO.builder()
+                .id(request.getId())
+                .student(toUserRoleDTO(student))
+                .curator(curator != null ? toUserRoleDTO(curator) : null)
+                .comment(request.getComment())
+                .status(request.getStatus())
+                .creationTime(request.getCreationTime())
+                .closingTime(request.getClosingTime())
+                .fromTeam(fromTeam != null ? TeamChangeRequestResponseDTO.TeamRef.builder()
+                        .id(fromTeam.getId())
+                        .build() : null)
+                .toTeam(toTeam != null ? TeamChangeRequestResponseDTO.TeamRef.builder()
+                        .id(toTeam.getId())
+                        .build() : null)
+                .build();
+    }
+
+    private UserRoleDTO toUserRoleDTO(UserRole userRole) {
+        if (userRole == null) {
+            return null;
+        }
+
+        return UserRoleDTO.builder()
+                .id(userRole.getId())
+                .user(UserRoleDTO.UserDTO.builder()
+                        .id(userRole.getUser().getId())
+                        .username(userRole.getUser().getUsername())
+                        .fullName(userRole.getUser().getFullName())
+                        .email(userRole.getUser().getEmail())
+                        .build())
+                .role(UserRoleDTO.RoleDTO.builder()
+                        .id(userRole.getRole().getId())
+                        .role(userRole.getRole().getRole())
+                        .build())
+                .build();
     }
 
 }

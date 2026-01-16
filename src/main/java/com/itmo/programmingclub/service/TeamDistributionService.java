@@ -1,20 +1,24 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.model.RoleEnum;
-import com.itmo.programmingclub.model.entity.*;
-import com.itmo.programmingclub.model.entity.Class;
-import com.itmo.programmingclub.repository.TeamRepository;
-import com.itmo.programmingclub.repository.UserRoleRepository;
-import com.itmo.programmingclub.repository.UserTeamRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.entity.Class;
+import com.itmo.programmingclub.model.entity.Team;
+import com.itmo.programmingclub.model.entity.UserRole;
+import com.itmo.programmingclub.model.entity.UserTeam;
+import com.itmo.programmingclub.repository.TeamRepository;
+import com.itmo.programmingclub.repository.UserRoleRepository;
+import com.itmo.programmingclub.repository.UserTeamRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
