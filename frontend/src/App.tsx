@@ -7,6 +7,8 @@ import ManagerDashboard from './pages/dashBoards/managerDashBoard/ManagerDashboa
 import ManagerActivation from './pages/managerActivation/ManagerActivation';
 import GroupManagement from './pages/groupManagement/GroupManagement';
 import CuratorDashboard from './pages/dashBoards/curatorDashBoard/CuratorDashboard';
+import TaskManagement from './pages/taskManagement/TaskManagement';
+import ClassManagement from './pages/classManagement/ClassManagement';
 import ClassRoom from './pages/classRoom/ClassRoom';
 import StudentDashboard from './pages/dashBoards/studentDashboard/StudentDashboard';
 import StudentTransferRequest from './pages/transferRequest/StudentTransferRequest';
@@ -57,10 +59,26 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/curator/*"
+              path="/curator"
               element={
                 <PrivateRoute requiredRole="CURATOR">
                   <CuratorDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/curator/tasks"
+              element={
+                <PrivateRoute requiredRole="CURATOR">
+                  <TaskManagement />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/curator/classes"
+              element={
+                <PrivateRoute requiredRole="CURATOR">
+                  <ClassManagement />
                 </PrivateRoute>
               }
             />

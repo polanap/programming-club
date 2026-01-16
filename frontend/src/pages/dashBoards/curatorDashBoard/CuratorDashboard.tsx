@@ -51,8 +51,15 @@ const CuratorDashboard: React.FC = () => {
         
         <div className={styles.dashboardGrid}>
           <div className={styles.dashboardCard} onClick={() => navigate('/curator/tasks')}>
-            <h3>Задания</h3>
+            <h3>Управление заданиями</h3>
             <p>Мои задания: {tasks.length}</p>
+            <p>Создание, редактирование и привязка заданий к классам</p>
+          </div>
+          
+          <div className={styles.dashboardCard} onClick={() => navigate('/curator/classes')}>
+            <h3>Мои классы</h3>
+            <p>Просмотр и редактирование классов</p>
+            <p>Привязка заданий к классам</p>
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/curator/groups')}>

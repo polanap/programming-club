@@ -104,12 +104,21 @@ export const taskAPI = {
   create: (task: any): Promise<AxiosResponse<any>> => api.post('/tasks', task),
   update: (id: number, task: any): Promise<AxiosResponse<any>> => api.put(`/tasks/${id}`, task),
   delete: (id: number): Promise<AxiosResponse<void>> => api.delete(`/tasks/${id}`),
+  // Curator-specific endpoints
+  getAvailableForCurator: (): Promise<AxiosResponse<any[]>> => api.get('/tasks/curator/available'),
+  getMyTasks: (): Promise<AxiosResponse<any[]>> => api.get('/tasks/curator/my'),
 };
 
 export const classAPI = {
   getAll: (): Promise<AxiosResponse<any[]>> => api.get('/classes'),
   getById: (id: number): Promise<AxiosResponse<any>> => api.get(`/classes/${id}`),
   getBySchedule: (scheduleId: number): Promise<AxiosResponse<any[]>> => api.get(`/classes/schedule/${scheduleId}`),
+  getByGroup: (groupId: number): Promise<AxiosResponse<any[]>> => api.get(`/classes/group/${groupId}`),
+  getMyClasses: (): Promise<AxiosResponse<any[]>> => api.get('/classes/curator/my'),
+  assignTask: (classId: number, taskId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/classes/${classId}/tasks/${taskId}`),
+  removeTask: (classId: number, taskId: number): Promise<AxiosResponse<void>> => 
+    api.delete(`/classes/${classId}/tasks/${taskId}`),
 };
 
 export const teamAPI = {
@@ -187,6 +196,13 @@ export const managerAPI = {
   getInactive: (page: number = 0, size: number = 10): Promise<AxiosResponse<any>> => 
     api.get('/managers/inactive', { params: { page, size } }),
   activate: (userId: number): Promise<AxiosResponse<any>> => api.post(`/managers/${userId}/activate`),
+};
+
+export const testAPI = {
+  getByTask: (taskId: number): Promise<AxiosResponse<any[]>> => api.get(`/tasks/${taskId}/tests`),
+  create: (taskId: number, test: any): Promise<AxiosResponse<any>> => api.post(`/tasks/${taskId}/tests`, test),
+  update: (testId: number, test: any): Promise<AxiosResponse<any>> => api.put(`/tests/${testId}`, test),
+  delete: (testId: number): Promise<AxiosResponse<void>> => api.delete(`/tests/${testId}`),
 };
 
 export default api;

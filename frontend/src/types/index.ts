@@ -48,6 +48,7 @@ export interface Task {
   id: number;
   condition: string;
   authorId: number;
+  author?: User;
   isOpen: boolean;
 }
 
@@ -60,6 +61,8 @@ export interface Team {
 export interface Class {
   id: number;
   scheduleId: number;
+  classDate?: string;
+  tasks?: Task[];
 }
 
 export interface CreateScheduleRequest {
@@ -217,4 +220,11 @@ export interface SelectGroupDTO {
 
 export interface CuratorCommentDTO {
   comment: string;
+}
+
+export interface Test {
+  id: number;
+  input: string;
+  output: string;
+  taskId: number;
 }
