@@ -14,7 +14,10 @@ import StudentDashboard from './pages/dashBoards/studentDashboard/StudentDashboa
 import StudentTransferRequest from './pages/transferRequest/StudentTransferRequest';
 import ManagerTransferRequest from './pages/transferRequest/ManagerTransferRequest';
 import CuratorTransferRequest from './pages/transferRequest/CuratorTransferRequest';
+import CuratorTeamChangeRequests from './pages/teamChangeRequests/CuratorTeamChangeRequests';
 import Login from './pages/login/Login';
+import StudentGroups from './pages/studentGroups/StudentGroups';
+import StudentGroupClasses from './pages/studentGroups/StudentGroupClasses';
 
 import './App.css';
 
@@ -91,6 +94,14 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/curator/team-change-requests"
+              element={
+                <PrivateRoute requiredRole="CURATOR">
+                  <CuratorTeamChangeRequests />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/student/*"
               element={
                 <PrivateRoute requiredRole="STUDENT">
@@ -103,6 +114,22 @@ const App: React.FC = () => {
               element={
                 <PrivateRoute requiredRole="STUDENT">
                   <StudentTransferRequest />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/student/groups"
+              element={
+                <PrivateRoute requiredRole="STUDENT">
+                  <StudentGroups />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/student/groups/:groupId"
+              element={
+                <PrivateRoute requiredRole="STUDENT">
+                  <StudentGroupClasses />
                 </PrivateRoute>
               }
             />

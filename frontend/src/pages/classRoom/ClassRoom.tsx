@@ -5,7 +5,7 @@ import CodeEditor from '../../components/codeEditor/CodeEditor';
 import TaskList from '../../components/taskList/TaskList';
 import HandRaiseButton from '../../components/handRiseButton/HandRaiseButton';
 import { classAPI, taskAPI, teamAPI } from '../../services/api';
-import { Class, Task, Team, AuthUser, RoleEnum } from '../../types';
+import { Class, Task, Team, TeamResponseDTO, AuthUser, RoleEnum } from '../../types';
 import styles from './ClassRoom.module.scss';
 
 const ClassRoom: React.FC = () => {
@@ -29,10 +29,23 @@ const ClassRoom: React.FC = () => {
       
       setTasks(tasksRes.data || []);
       
-      // Find user's team
-      // This would need proper implementation based on user_team table
-      if (teamsRes.data && teamsRes.data.length > 0) {
-        setTeam(teamsRes.data[0] as Team); // Simplified - should find user's actual team
+      // Find user's team from distribution (elder or member match current user)
+      const teams: TeamResponseDTO[] = Array.isArray(teamsRes.data) ? teamsRes.data : [];
+      const myTeam = user?.id
+        ? teams.find(t =>
+            (t.elder?.userId === user.id) ||
+            (Array.isArray(t.members) && t.members.some(m => m.userId === user.id))
+          )
+        : null;
+
+      if (myTeam) {
+        setTeam({
+          id: myTeam.teamId,
+          classId: parseInt(classId),
+          elderId: myTeam.elder?.userId ?? 0,
+        });
+      } else {
+        setTeam(null);
       }
     } catch (error) {
       console.error('Error loading class data:', error);

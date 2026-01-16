@@ -41,11 +41,11 @@ const StudentDashboard: React.FC = () => {
         <h2>Панель ученика</h2>
         
         <div className={styles.dashboardGrid}>
-          <div className={styles.dashboardCard} onClick={() => navigate('/student/classes')}>
-            <h3>Занятия</h3>
-            <p>Доступных занятий: {classes.length}</p>
+          <div className={styles.dashboardCard} onClick={() => navigate('/student/groups')}>
+            <h3>Мои группы</h3>
+            <p>Перейти к списку моих групп</p>
           </div>
-          
+
           <div className={styles.dashboardCard} onClick={() => navigate('/student/transfer-request')}>
             <h3>Заявка на перевод</h3>
             <p>Подать заявку на перевод в другую группу</p>
