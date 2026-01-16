@@ -43,7 +43,7 @@ const TaskManagement: React.FC = () => {
       const [myTasksRes, availableTasksRes, groupsRes] = await Promise.all([
         taskAPI.getMyTasks(),
         taskAPI.getAvailableForCurator(),
-        groupAPI.getMyGroups(),
+        groupAPI.getMyCuratorGroups(),
       ]);
       const myTasksData = myTasksRes.data || [];
       const availableTasksData = availableTasksRes.data || [];
