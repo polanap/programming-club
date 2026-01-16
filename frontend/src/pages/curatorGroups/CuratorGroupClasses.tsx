@@ -62,6 +62,10 @@ const CuratorGroupClasses: React.FC = () => {
   const [showTasksModal, setShowTasksModal] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string>('');
+  
+  // For moving students between teams
+  const [movingStudent, setMovingStudent] = useState<{ userRoleId: number; currentTeamId: number; fullName: string } | null>(null);
+  const [selectedTargetTeamId, setSelectedTargetTeamId] = useState<number>(0);
 
   useEffect(() => {
     if (!showLessonMenu) return;
@@ -250,6 +254,28 @@ const CuratorGroupClasses: React.FC = () => {
     }
   };
 
+  const handleMoveStudent = async () => {
+    if (!movingStudent || !selectedTargetTeamId) {
+      setActionError('Выберите целевую команду');
+      return;
+    }
+    try {
+      setActionError('');
+      await teamChangeRequestAPI.moveStudent(movingStudent.userRoleId, selectedTargetTeamId);
+      setActionSuccess(`Студент ${movingStudent.fullName} успешно перемещен в команду #${selectedTargetTeamId}`);
+      setMovingStudent(null);
+      setSelectedTargetTeamId(0);
+      if (selectedClass?.id) {
+        await Promise.all([
+          loadTeamsForClass(selectedClass.id),
+          loadTeamChangeRequestsForClass(selectedClass.id),
+        ]);
+      }
+    } catch (err: any) {
+      setActionError(err.response?.data?.errorMessage || err.response?.data?.message || 'Ошибка перемещения студента');
+    }
+  };
+
   const connectToClass = () => {
     if (!selectedClass?.id) return;
     navigate(`/classroom/${selectedClass.id}`);
@@ -368,7 +394,13 @@ const CuratorGroupClasses: React.FC = () => {
               <div className={styles.requestActions}>
                 <button
                   className={styles.buttonSecondary}
-                  onClick={() => setShowTeamsModal(true)}
+                  onClick={() => {
+                    setShowTeamsModal(true);
+                    setMovingStudent(null);
+                    setSelectedTargetTeamId(0);
+                    setActionError('');
+                    setActionSuccess('');
+                  }}
                 >
                   Посмотреть разбиение на команды
                 </button>
@@ -402,6 +434,8 @@ const CuratorGroupClasses: React.FC = () => {
                   setShowTeamsModal(false);
                   setShowTeamChangeRequestsModal(false);
                   setShowTasksModal(false);
+                  setMovingStudent(null);
+                  setSelectedTargetTeamId(0);
                   setActionError('');
                   setActionSuccess('');
                 }}
@@ -417,35 +451,106 @@ const CuratorGroupClasses: React.FC = () => {
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <h3>Разбиение по командам</h3>
-            {loadingTeams ? (
-              <div className={styles.loading}>Загрузка...</div>
-            ) : (
-              <div className={styles.requestsList}>
-                {(teams || []).map(t => (
-                  <div key={t.teamId} className={styles.requestCard}>
-                    <div className={styles.requestHeader}>
-                      <h4>Команда #{t.teamId}</h4>
-                    </div>
-                    <div className={styles.requestDetails}>
-                      <p><strong>Староста:</strong> {t.elder?.fullName || '—'}</p>
-                      <p><strong>Участники:</strong></p>
-                      {t.members?.length ? (
-                        <ul>
-                          {t.members.map(m => (
-                            <li key={m.userRoleId}>{m.fullName} (@{m.username})</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>—</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+            {actionError && <div className={styles.error}>{actionError}</div>}
+            {actionSuccess && <div className={styles.info}>{actionSuccess}</div>}
+            
+            {movingStudent ? (
+              <div>
+                <p>Переместить студента <strong>{movingStudent.fullName}</strong> в команду:</p>
+                <div className={styles.formGroup}>
+                  <label>Выберите команду:</label>
+                  <select
+                    value={selectedTargetTeamId}
+                    onChange={(e) => setSelectedTargetTeamId(Number(e.target.value) || 0)}
+                  >
+                    <option value={0}>Выберите команду</option>
+                    {teams
+                      .filter(t => t.teamId !== movingStudent.currentTeamId)
+                      .map(t => (
+                        <option key={t.teamId} value={t.teamId}>
+                          Команда #{t.teamId}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className={styles.modalActions}>
+                  <button 
+                    className={styles.button} 
+                    onClick={handleMoveStudent}
+                    disabled={!selectedTargetTeamId}
+                  >
+                    Переместить
+                  </button>
+                  <button 
+                    className={styles.buttonSecondary} 
+                    onClick={() => {
+                      setMovingStudent(null);
+                      setSelectedTargetTeamId(0);
+                      setActionError('');
+                      setActionSuccess('');
+                    }}
+                  >
+                    Отмена
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                {loadingTeams ? (
+                  <div className={styles.loading}>Загрузка...</div>
+                ) : (
+                  <div className={styles.requestsList}>
+                    {(teams || []).map(t => (
+                      <div key={t.teamId} className={styles.requestCard}>
+                        <div className={styles.requestHeader}>
+                          <h4>Команда #{t.teamId}</h4>
+                        </div>
+                        <div className={styles.requestDetails}>
+                          <p><strong>Староста:</strong> {t.elder?.fullName || '—'}</p>
+                          <p><strong>Участники:</strong></p>
+                          {t.members?.length ? (
+                            <ul>
+                              {t.members.map(m => (
+                                <li key={m.userRoleId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                                  <span>{m.fullName} (@{m.username})</span>
+                                  <button
+                                    className={styles.buttonSecondary}
+                                    style={{ padding: '4px 8px', fontSize: '12px' }}
+                                    onClick={() => {
+                                      setMovingStudent({
+                                        userRoleId: m.userRoleId,
+                                        currentTeamId: t.teamId,
+                                        fullName: m.fullName,
+                                      });
+                                      setSelectedTargetTeamId(0);
+                                      setActionError('');
+                                      setActionSuccess('');
+                                    }}
+                                  >
+                                    Переместить
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>—</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.modalActions}>
+                  <button className={styles.buttonSecondary} onClick={() => {
+                    setShowTeamsModal(false);
+                    setMovingStudent(null);
+                    setSelectedTargetTeamId(0);
+                    setActionError('');
+                    setActionSuccess('');
+                  }}>Закрыть</button>
+                </div>
+              </>
             )}
-            <div className={styles.modalActions}>
-              <button className={styles.buttonSecondary} onClick={() => setShowTeamsModal(false)}>Закрыть</button>
-            </div>
           </div>
         </div>
       )}
