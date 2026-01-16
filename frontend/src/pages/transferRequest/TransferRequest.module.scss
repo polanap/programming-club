@@ -33,8 +33,15 @@
   font-size: 14px;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #0056b3;
+  }
+
+  &:disabled {
+    background-color: #6c757d;
+    color: #adb5bd;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 
@@ -48,8 +55,15 @@
   font-size: 14px;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #545b62;
+  }
+
+  &:disabled {
+    background-color: #adb5bd;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 
@@ -63,8 +77,15 @@
   font-size: 14px;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #c82333;
+  }
+
+  &:disabled {
+    background-color: #adb5bd;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 
@@ -78,8 +99,15 @@
   font-size: 12px;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #218838;
+  }
+
+  &:disabled {
+    background-color: #adb5bd;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 }
 

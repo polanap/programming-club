@@ -106,6 +106,31 @@ public class TeamChangeRequestService {
         }
     }
 
+    public void moveStudentDirectly(String curatorUsername, Integer studentUserRoleId, Integer toTeamId) {
+        // Verify curator has CURATOR role
+        getUserRole(curatorUsername, "CURATOR");
+        
+        UserRole studentRole = userRoleRepository.findById(studentUserRoleId)
+                .orElseThrow(() -> new NotFoundException("Student not found"));
+
+        UserTeam currentMembership = userTeamRepository.findTopByUserRole_IdOrderByTeam_IdDesc(studentRole.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Student is not assigned to any team"));
+
+        Team fromTeam = currentMembership.getTeam();
+        Team toTeam = teamRepository.findById(toTeamId)
+                .orElseThrow(() -> new NotFoundException("Target team not found"));
+
+        if (fromTeam.getId().equals(toTeam.getId())) {
+            throw new IllegalArgumentException("Student is already in this team");
+        }
+
+        if (!fromTeam.getClassEntity().getId().equals(toTeam.getClassEntity().getId())) {
+            throw new IllegalArgumentException("Cannot move student to a team in a different class");
+        }
+
+        executeTransfer(studentRole, fromTeam, toTeam);
+    }
+
     private void executeTransfer(UserRole studentRole, Team fromTeam, Team toTeam) {
         UserTeam.UserTeamId oldId = new UserTeam.UserTeamId(studentRole.getId(), fromTeam.getId());
         if (userTeamRepository.existsById(oldId)) {

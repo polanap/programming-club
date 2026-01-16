@@ -18,6 +18,8 @@ import CuratorTeamChangeRequests from './pages/teamChangeRequests/CuratorTeamCha
 import Login from './pages/login/Login';
 import StudentGroups from './pages/studentGroups/StudentGroups';
 import StudentGroupClasses from './pages/studentGroups/StudentGroupClasses';
+import CuratorGroups from './pages/curatorGroups/CuratorGroups';
+import CuratorGroupClasses from './pages/curatorGroups/CuratorGroupClasses';
 
 import './App.css';
 
@@ -98,6 +100,22 @@ const App: React.FC = () => {
               element={
                 <PrivateRoute requiredRole="CURATOR">
                   <CuratorTeamChangeRequests />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/curator/groups"
+              element={
+                <PrivateRoute requiredRole="CURATOR">
+                  <CuratorGroups />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/curator/groups/:groupId"
+              element={
+                <PrivateRoute requiredRole="CURATOR">
+                  <CuratorGroupClasses />
                 </PrivateRoute>
               }
             />

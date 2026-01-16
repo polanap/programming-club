@@ -71,5 +71,14 @@ public class TeamChangeRequestController {
         teamChangeRequestService.processTeamChangeRequest(requestId, userDetails.getUsername(), approved);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/curator/move-student")
+    @PreAuthorize("hasRole('CURATOR')")
+    public ResponseEntity<Void> moveStudentDirectly(@RequestParam Integer studentUserRoleId,
+                                                    @RequestParam Integer toTeamId,
+                                                    @AuthenticationPrincipal UserDetails userDetails) {
+        teamChangeRequestService.moveStudentDirectly(userDetails.getUsername(), studentUserRoleId, toTeamId);
+        return ResponseEntity.ok().build();
+    }
 }
 

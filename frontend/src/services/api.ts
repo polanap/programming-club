@@ -201,6 +201,8 @@ export const teamChangeRequestAPI = {
   create: (dto: TeamChangeRequestDTO): Promise<AxiosResponse<void>> => api.post('/team-change-requests', dto),
   process: (requestId: number, approved: boolean): Promise<AxiosResponse<void>> =>
     api.post(`/team-change-requests/${requestId}/process`, null, { params: { approved } }),
+  moveStudent: (studentUserRoleId: number, toTeamId: number): Promise<AxiosResponse<void>> =>
+    api.post('/team-change-requests/curator/move-student', null, { params: { studentUserRoleId, toTeamId } }),
 };
 
 export const elderChangeRequestAPI = {
