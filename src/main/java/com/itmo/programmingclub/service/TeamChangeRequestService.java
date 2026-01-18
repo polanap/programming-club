@@ -122,12 +122,27 @@ public class TeamChangeRequestService {
 
         userTeamRepository.save(newMembership);
 
+        // Логика для старой команды (обновляем старосту, если он ушел)
         if (fromTeam.getElder() != null && fromTeam.getElder().getId().equals(studentRole.getUser().getId())) {
             var remainingMembers = userTeamRepository.findByTeamId(fromTeam.getId());
             if (!remainingMembers.isEmpty()) {
                 fromTeam.setElder(remainingMembers.get(0).getUserRole().getUser());
                 teamRepository.save(fromTeam);
             }
+        }
+
+        // Логика для новой команды (назначаем ученика старостой в новой команде, если до этого команда была пустая)
+        List<UserTeam> newTeamMembers = userTeamRepository.findByTeamId(toTeam.getId());
+
+        boolean isElderPresentInTeam = false;
+        if (toTeam.getElder() != null) {
+            isElderPresentInTeam = newTeamMembers.stream()
+                    .anyMatch(m -> m.getUserRole().getUser().getId().equals(toTeam.getElder().getId()));
+        }
+
+        if (newTeamMembers.size() == 1 || toTeam.getElder() == null || !isElderPresentInTeam) {
+            toTeam.setElder(studentRole.getUser());
+            teamRepository.save(toTeam);
         }
     }
 
