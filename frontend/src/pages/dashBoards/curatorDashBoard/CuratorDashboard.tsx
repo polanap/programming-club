@@ -63,8 +63,9 @@ const CuratorDashboard: React.FC = () => {
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/curator/groups')}>
-            <h3>Группы</h3>
+            <h3>Мои группы</h3>
             <p>Всего групп: {groups.length}</p>
+            <p>Просмотр групп, классов и управление занятиями</p>
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/curator/team-change-requests')}>
