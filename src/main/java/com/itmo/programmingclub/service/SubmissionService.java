@@ -3,12 +3,10 @@ package com.itmo.programmingclub.service;
 import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.RoleEnum;
 import com.itmo.programmingclub.model.dto.SubmissionRequestDTO;
-import com.itmo.programmingclub.model.entity.Submission;
-import com.itmo.programmingclub.model.entity.Task;
-import com.itmo.programmingclub.model.entity.UserRole;
-import com.itmo.programmingclub.model.entity.UserTeam;
+import com.itmo.programmingclub.model.entity.*;
 import com.itmo.programmingclub.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,16 +27,24 @@ public class SubmissionService {
         UserRole studentRole = userRoleRepository.findByUser_UsernameAndRole_Role(username, RoleEnum.STUDENT)
                 .orElseThrow(() -> new NotFoundException("Student role not found for user: " + username));
 
+        UserTeam currentMembership = userTeamRepository.findTopByUserRole_IdOrderByTeam_IdDesc(studentRole.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Student is not in a team"));
+
+        Team team = currentMembership.getTeam();
+
+        User currentUser = studentRole.getUser();
+        User teamElder = team.getElder();
+
+        if (teamElder == null || !teamElder.getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Only the team elder can submit solutions.");
+        }
+
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new NotFoundException("Task not found"));
 
-        UserTeam currentTeam = userTeamRepository.findTopByUserRole_IdOrderByTeam_IdDesc(studentRole.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Student is not in a team"));
-
-
         Submission submission = new Submission();
         submission.setTask(task);
-        submission.setTeam(currentTeam.getTeam());
+        submission.setTeam(team);
         submission.setCode(dto.getCode());
         submission.setLanguage(dto.getLanguage());
         submission.setStatus(Submission.SubmissionStatus.IN_PROCESS);
