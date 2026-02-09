@@ -16,6 +16,7 @@ import {
   TeamChangeRequestDTO,
   ElderChangeRequest,
   ElderChangeRequestDTO,
+  Task,
 } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8181/api';
@@ -136,6 +137,7 @@ export const classAPI = {
     api.post(`/classes/${classId}/tasks/${taskId}`),
   removeTask: (classId: number, taskId: number): Promise<AxiosResponse<void>> => 
     api.delete(`/classes/${classId}/tasks/${taskId}`),
+  getTasks: (id: number): Promise<AxiosResponse<Task[]>> => api.get(`/classes/${id}/tasks`),
 };
 
 export const teamAPI = {
@@ -198,6 +200,7 @@ export const transferRequestAPI = {
 export const teamChangeRequestAPI = {
   getAll: (): Promise<AxiosResponse<TeamChangeRequest[]>> => api.get('/team-change-requests'),
   getById: (id: number): Promise<AxiosResponse<TeamChangeRequest>> => api.get(`/team-change-requests/${id}`),
+  getByClass: (classId: number): Promise<AxiosResponse<TeamChangeRequest[]>> => api.get(`/team-change-requests/class/${classId}`),
   create: (dto: TeamChangeRequestDTO): Promise<AxiosResponse<void>> => api.post('/team-change-requests', dto),
   process: (requestId: number, approved: boolean): Promise<AxiosResponse<void>> =>
     api.post(`/team-change-requests/${requestId}/process`, null, { params: { approved } }),
@@ -220,6 +223,37 @@ export const testAPI = {
   create: (taskId: number, test: any): Promise<AxiosResponse<any>> => api.post(`/tasks/${taskId}/tests`, test),
   update: (testId: number, test: any): Promise<AxiosResponse<any>> => api.put(`/tests/${testId}`, test),
   delete: (testId: number): Promise<AxiosResponse<void>> => api.delete(`/tests/${testId}`),
+};
+
+export const classSessionAPI = {
+  joinAsStudent: (classId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/${classId}/join/student`),
+  leaveAsStudent: (classId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/${classId}/leave/student`),
+  joinAsCurator: (classId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/${classId}/join/curator`),
+  leaveAsCurator: (classId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/${classId}/leave/curator`),
+  joinTeam: (teamId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/team/${teamId}/join`),
+  leaveTeam: (teamId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/team/${teamId}/leave`),
+  blockTeamSubmission: (teamId: number, blocked: boolean): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/team/${teamId}/block-submission`, null, { params: { blocked } }),
+  toggleHand: (teamId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/team/${teamId}/toggle-hand`),
+  selectTask: (teamId: number, taskId: number): Promise<AxiosResponse<void>> => 
+    api.post(`/class-session/team/${teamId}/select-task/${taskId}`),
+  submitSolution: (teamId: number, taskId: number, solution?: string): Promise<AxiosResponse<any>> => 
+    api.post(`/class-session/team/${teamId}/submit-solution/${taskId}`, solution || null),
+  getClassEvents: (classId: number): Promise<AxiosResponse<any[]>> => 
+    api.get(`/events/class/${classId}`),
+  getTeamStatus: (teamId: number): Promise<AxiosResponse<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null }>> => 
+    api.get(`/class-session/team/${teamId}/status`),
+  isCuratorJoined: (teamId: number): Promise<AxiosResponse<{ isJoined: boolean }>> => 
+    api.get(`/class-session/team/${teamId}/is-curator-joined`),
+  getJoinedCurators: (teamId: number): Promise<AxiosResponse<number[]>> => 
+    api.get(`/class-session/team/${teamId}/joined-curators`),
 };
 
 export default api;

@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/header/Header';
-import { classAPI, scheduleAPI, teamAPI, teamChangeRequestAPI, elderChangeRequestAPI } from '../../services/api';
-import { AuthUser, ClassResponseDTO, Schedule, TeamResponseDTO } from '../../types';
+import EventLog from '../../components/eventLog/EventLog';
+import { classAPI, scheduleAPI, teamAPI, teamChangeRequestAPI, elderChangeRequestAPI, classSessionAPI } from '../../services/api';
+import { AuthUser, ClassResponseDTO, Schedule, TeamResponseDTO, RoleEnum } from '../../types';
 import styles from '../transferRequest/TransferRequest.module.scss';
 
 type ClassWithSchedule = ClassResponseDTO & { schedule?: Schedule };
@@ -56,9 +57,11 @@ const StudentGroupClasses: React.FC = () => {
   const [selectedNewElderUserRoleId, setSelectedNewElderUserRoleId] = useState<number>(0);
   const [actionError, setActionError] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string>('');
+  const [showEventLog, setShowEventLog] = useState<boolean>(false);
 
   const userStr = localStorage.getItem('user');
   const user: AuthUser | null = userStr ? JSON.parse(userStr) : null;
+  const isCuratorOrManager = user?.roles?.includes(RoleEnum.CURATOR) || user?.roles?.includes(RoleEnum.MANAGER);
 
   useEffect(() => {
     if (!showLessonMenu) return;
@@ -222,9 +225,17 @@ const StudentGroupClasses: React.FC = () => {
     }
   };
 
-  const connectToClass = () => {
+  const connectToClass = async () => {
     if (!selectedClass?.id) return;
-    navigate(`/classroom/${selectedClass.id}`);
+    try {
+      // Log join event before navigating
+      await classSessionAPI.joinAsStudent(selectedClass.id);
+      navigate(`/classroom/${selectedClass.id}`);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || 'Ошибка при присоединении к занятию';
+      setActionError(errorMsg);
+      // Don't navigate if join failed
+    }
   };
 
   if (loading) {
@@ -263,6 +274,20 @@ const StudentGroupClasses: React.FC = () => {
                     <p><strong>Дата:</strong> {c.classDate}</p>
                     <p><strong>Начало:</strong> {start ? start.toLocaleString('ru-RU') : '—'}</p>
                   </div>
+                  {isCuratorOrManager && (
+                    <div className={styles.requestActions}>
+                      <button
+                        className={styles.buttonSmall}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedClass(c);
+                          setShowEventLog(true);
+                        }}
+                      >
+                        Посмотреть лог событий
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -436,6 +461,16 @@ const StudentGroupClasses: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showEventLog && selectedClass && (
+        <EventLog
+          classId={selectedClass.id}
+          onClose={() => {
+            setShowEventLog(false);
+            setSelectedClass(null);
+          }}
+        />
       )}
     </div>
   );
