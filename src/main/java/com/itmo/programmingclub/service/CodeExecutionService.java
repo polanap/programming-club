@@ -5,9 +5,11 @@ import com.github.codeboy.piston4j.api.ExecutionRequest;
 import com.github.codeboy.piston4j.api.ExecutionResult;
 import com.github.codeboy.piston4j.api.Piston;
 import com.github.codeboy.piston4j.api.Runtime;
+import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.model.entity.Submission;
 import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.model.entity.Test;
+import com.itmo.programmingclub.repository.EventRepository;
 import com.itmo.programmingclub.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -25,6 +28,7 @@ import java.util.List;
 public class CodeExecutionService {
 
     private final SubmissionRepository submissionRepository;
+    private final EventRepository eventRepository;
     private final Piston piston;
 
     @Async
@@ -33,10 +37,14 @@ public class CodeExecutionService {
         Submission submission = submissionRepository.findById(submissionId).orElse(null);
         if (submission == null) return;
 
+        if (submission.getStatus() == Submission.SubmissionStatus.NEW) {
+            submission.setStatus(Submission.SubmissionStatus.IN_PROCESS);
+        }
+
         Task task = submission.getTask();
         List<Test> tests = task.getTests().stream().toList();
         String sourceCode = submission.getCode();
-        String language = submission.getLanguage();
+        String language = "python";
 
         log.info("Starting Piston execution for submission {}", submissionId);
         Instant start = Instant.now();
@@ -44,6 +52,10 @@ public class CodeExecutionService {
         try {
             Runtime runtime = piston.getRuntime(language)
                     .orElseThrow(() -> new IllegalArgumentException("Language not found: " + language));
+
+            if (tests.isEmpty()) {
+                log.warn("Task {} has no tests. Marking as OK.", task.getId());
+            }
 
             boolean allTestsPassed = true;
 
@@ -76,7 +88,25 @@ public class CodeExecutionService {
         } finally {
             submission.setComplitionTime(Duration.between(start, Instant.now()));
             submissionRepository.save(submission);
+
+            // Создаём запись в логе
+            createResultEvent(submission);
+
+            log.info("Finished submission {}. Status: {}", submissionId, submission.getStatus());
         }
+    }
+
+    private void createResultEvent(Submission submission) {
+        Event event = new Event();
+        event.setType(Event.EventType.RESULT_OF_SOLUTION); // Тип события
+        event.setTime(OffsetDateTime.now());
+
+        event.setSubmission(submission);
+        event.setTeam(submission.getTeam());
+        event.setTask(submission.getTask());
+        event.setClassEntity(submission.getTeam().getClassEntity());
+
+        eventRepository.save(event);
     }
 
     private ExecutionResult runCode(Runtime runtime, String code, String language, String stdin) {

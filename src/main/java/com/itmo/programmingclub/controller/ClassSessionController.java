@@ -106,6 +106,12 @@ public class ClassSessionController {
         return ResponseEntity.ok(SubmissionDTO.fromEntity(submission));
     }
 
+    @GetMapping("/submission/{submissionId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SubmissionDTO> getSubmissionStatus(@PathVariable Integer submissionId) {
+        return ResponseEntity.ok(classSessionService.getSubmissionDetails(submissionId));
+    }
+
     @GetMapping("/team/{teamId}/status")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> getTeamStatus(@PathVariable Integer teamId) {
