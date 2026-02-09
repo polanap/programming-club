@@ -44,7 +44,7 @@ public class CodeExecutionService {
         Task task = submission.getTask();
         List<Test> tests = task.getTests().stream().toList();
         String sourceCode = submission.getCode();
-        String language = "python";
+        String language = submission.getLanguage();
 
         log.info("Starting Piston execution for submission {}", submissionId);
         Instant start = Instant.now();

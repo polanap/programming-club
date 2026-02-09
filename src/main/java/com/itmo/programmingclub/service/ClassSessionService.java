@@ -317,6 +317,8 @@ public class ClassSessionService {
         submission.setTeam(team);
         submission.setTask(task);
         submission.setStatus(Submission.SubmissionStatus.NEW);
+        submission.setCode(solution);
+        submission.setLanguage("python");
         submission.setComplitionTime(java.time.Duration.ofMinutes(0)); // Should be calculated properly
         
         Submission savedSubmission = submissionService.createSubmission(submission);
