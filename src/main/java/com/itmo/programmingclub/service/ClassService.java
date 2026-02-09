@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,7 @@ public class ClassService {
     private final ClassRepository classRepository;
     private final ScheduleRepository scheduleRepository;
     private final TeamDistributionService teamDistributionService;
+    private final ZoneId zoneId;
 
     public Class createClass(ClassRequestDTO dto) {
         Schedule schedule = scheduleRepository.findById(dto.getScheduleId())
@@ -253,6 +256,84 @@ public class ClassService {
             return today.plusWeeks(1);
         }
         return nextMonday;
+    }
+
+    // ========== Class Time Validation Methods ==========
+
+    /**
+     * Checks if a class is currently in session (started and not ended).
+     * 
+     * @param classEntity The class to check
+     * @return true if the class is currently in session, false otherwise
+     */
+    public boolean isClassInSession(Class classEntity) {
+        if (classEntity == null) {
+            return false;
+        }
+        
+        Schedule schedule = classEntity.getSchedule();
+        if (schedule == null) {
+            return false;
+        }
+        
+        LocalDate classDate = classEntity.getClassDate();
+        if (classDate == null) {
+            return false;
+        }
+        
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+        LocalDate today = now.toLocalDate();
+        
+        // Check if today is the class date
+        if (!classDate.equals(today)) {
+            return false;
+        }
+        
+        // Create ZonedDateTime for class start and end times in the configured timezone
+        LocalTime classStartTime = schedule.getClassStartTime();
+        LocalTime classEndTime = schedule.getClassEndTime();
+        
+        ZonedDateTime classStartDateTime = classDate.atTime(classStartTime).atZone(zoneId);
+        ZonedDateTime classEndDateTime = classDate.atTime(classEndTime).atZone(zoneId);
+        
+        // Log for debugging
+        log.debug("Checking if class {} is in session: now={}, start={}, end={}", 
+                classEntity.getId(), now, classStartDateTime, classEndDateTime);
+        
+        // Check if current time is between start (inclusive) and end (inclusive)
+        // Using !isBefore to be inclusive of start time, !isAfter to be inclusive of end time
+        boolean isInSession = !now.isBefore(classStartDateTime) && !now.isAfter(classEndDateTime);
+        log.debug("Class {} is in session: now={}, start={}, end={}, result={}", 
+                classEntity.getId(), now, classStartDateTime, classEndDateTime, isInSession);
+        return isInSession;
+    }
+
+    /**
+     * Validates that a class is currently in session.
+     * Throws IllegalArgumentException if the class is not in session.
+     * 
+     * @param classEntity The class to validate
+     * @throws IllegalArgumentException if the class is not in session
+     */
+    public void validateClassInSession(Class classEntity) {
+        if (!isClassInSession(classEntity)) {
+            throw new IllegalArgumentException("Занятие не началось или уже закончилось");
+        }
+    }
+
+    /**
+     * Gets the class entity and validates it is in session.
+     * 
+     * @param classId The ID of the class
+     * @return The class entity
+     * @throws NotFoundException if class not found
+     * @throws IllegalArgumentException if class is not in session
+     */
+    public Class getClassAndValidateInSession(Integer classId) {
+        Class classEntity = classRepository.findById(classId)
+                .orElseThrow(() -> new NotFoundException("Class not found"));
+        validateClassInSession(classEntity);
+        return classEntity;
     }
 }
 

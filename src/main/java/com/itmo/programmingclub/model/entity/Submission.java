@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Duration;
 import java.util.Set;
@@ -20,7 +22,8 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "complition_time", nullable = false)
+    @Column(name = "complition_time", nullable = false, columnDefinition = "INTERVAL")
+    @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
     private Duration complitionTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,6 +42,7 @@ public class Submission {
     private Set<Event> events;
 
     public enum SubmissionStatus {
+        NEW,
         OK,
         FAILED,
         IN_PROCESS

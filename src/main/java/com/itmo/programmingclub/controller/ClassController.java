@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.itmo.programmingclub.mapper.ClassMapper;
 import com.itmo.programmingclub.model.dto.ClassRequestDTO;
 import com.itmo.programmingclub.model.dto.ClassResponseDTO;
+import com.itmo.programmingclub.model.dto.TaskDTO;
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.service.ClassService;
 import com.itmo.programmingclub.service.TaskService;
@@ -48,6 +50,17 @@ public class ClassController {
                 .map(classMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/tasks")
+    @PreAuthorize("hasAnyRole('STUDENT', 'CURATOR')")
+    public ResponseEntity<List<TaskDTO>> getClassTasks(@PathVariable Integer id) {
+        // Validate class is in session for students
+        Class classEntity = classService.getClassAndValidateInSession(id);
+        List<TaskDTO> taskDTOs = classEntity.getTasks().stream()
+                .map(TaskDTO::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(taskDTOs);
     }
 
     @GetMapping("/schedule/{scheduleId}")
