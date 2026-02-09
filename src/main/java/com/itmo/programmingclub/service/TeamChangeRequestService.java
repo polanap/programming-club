@@ -177,6 +177,12 @@ public class TeamChangeRequestService {
                 .collect(Collectors.toList());
     }
 
+    public List<TeamChangeRequestResponseDTO> findByClassId(Integer classId) {
+        return teamChangeRequestRepository.findByClassId(classId).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
     private TeamChangeRequestResponseDTO toDTO(TeamChangeRequest request) {
         if (request == null) {
             return null;

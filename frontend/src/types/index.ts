@@ -299,3 +299,29 @@ export interface Test {
   output: string;
   taskId: number;
 }
+
+export type EventType = 
+  | 'TEAM_RAISED_HAND'
+  | 'TEAM_LOWERED_HAND'
+  | 'CURATOR_BLOCKED_TEAM'
+  | 'CURATOR_UNBLOCKED_TEAM'
+  | 'CURATOR_JOINED_TEAM'
+  | 'CURATOR_LEFT_TEAM'
+  | 'CURATOR_JOINED_CLASS'
+  | 'CURATOR_LEFT_CLASS'
+  | 'STUDENT_JOINED_CLASS'
+  | 'STUDENT_LEFT_CLASS'
+  | 'TEAM_SENT_SOLUTION'
+  | 'RESULT_OF_SOLUTION'
+  | 'TEAM_BEGAN_TO_COMPLETE_TASK';
+
+export interface Event {
+  id: number;
+  time: string;
+  type: EventType;
+  teamId?: number;
+  userRoleId?: number;
+  submissionId?: number;
+  classId?: number;
+  taskId?: number;
+}
