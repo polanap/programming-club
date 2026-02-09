@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.controller;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ import com.itmo.programmingclub.model.dto.ClassRequestDTO;
 import com.itmo.programmingclub.model.dto.ClassResponseDTO;
 import com.itmo.programmingclub.model.dto.TaskDTO;
 import com.itmo.programmingclub.model.entity.Class;
+import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.service.ClassService;
 import com.itmo.programmingclub.service.TaskService;
 
@@ -58,6 +60,7 @@ public class ClassController {
         // Validate class is in session for students
         Class classEntity = classService.getClassAndValidateInSession(id);
         List<TaskDTO> taskDTOs = classEntity.getTasks().stream()
+                .sorted(Comparator.comparing(Task::getId))
                 .map(TaskDTO::fromEntity)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(taskDTOs);
