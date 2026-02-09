@@ -1,5 +1,6 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.model.dto.EventDTO;
 import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,12 @@ public class EventService {
 
     public List<Event> findByClassId(Integer classId) {
         return eventRepository.findByClassEntityId(classId);
+    }
+
+    public List<EventDTO> findDTOsByClassId(Integer classId) {
+        return eventRepository.findByClassEntityId(classId).stream()
+                .map(EventDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     public List<Event> findByTimeRange(OffsetDateTime startTime, OffsetDateTime endTime) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../../components/header/Header';
+import EventLog from '../../components/eventLog/EventLog';
 import { classAPI, taskAPI } from '../../services/api';
 import { Class, Task } from '../../types';
 import styles from './ClassManagement.module.scss';
@@ -11,6 +12,8 @@ const ClassManagement: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [showEventLog, setShowEventLog] = useState<boolean>(false);
+  const [eventLogClassId, setEventLogClassId] = useState<number | null>(null);
 
   useEffect(() => {
     loadData();
@@ -151,6 +154,15 @@ const ClassManagement: React.FC = () => {
                   >
                     Редактировать
                   </button>
+                  <button
+                    className={styles.viewLogButton}
+                    onClick={() => {
+                      setEventLogClassId(cls.id);
+                      setShowEventLog(true);
+                    }}
+                  >
+                    Посмотреть лог событий
+                  </button>
                 </div>
               </div>
             ))}
@@ -240,6 +252,16 @@ const ClassManagement: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {showEventLog && eventLogClassId && (
+          <EventLog
+            classId={eventLogClassId}
+            onClose={() => {
+              setShowEventLog(false);
+              setEventLogClassId(null);
+            }}
+          />
         )}
       </div>
     </div>

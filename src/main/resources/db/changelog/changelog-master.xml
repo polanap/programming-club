@@ -12,4 +12,5 @@
     <include file="/db/changelog/changeset/0008-add-curator-to-team-request.sql"/>
     <include file="/db/changelog/changeset/0009-add-teams-to-change-request.sql"/>
     <include file="/db/changelog/changeset/0010-add-code-to-submission.sql"/>
+    <include file="/db/changelog/changeset/0012-add-new-status-to-submission.sql"/>
 </databaseChangeLog>

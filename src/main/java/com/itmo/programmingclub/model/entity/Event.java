@@ -56,14 +56,22 @@ public class Event {
     public enum EventType {
         TEAM_RAISED_HAND,
         TEAM_LOWERED_HAND,
+
+        CURATOR_BLOCKED_TEAM,
+        CURATOR_UNBLOCKED_TEAM,
+
         CURATOR_JOINED_TEAM,
         CURATOR_LEFT_TEAM,
+
         CURATOR_JOINED_CLASS,
         CURATOR_LEFT_CLASS,
+
         STUDENT_JOINED_CLASS,
         STUDENT_LEFT_CLASS,
+
         TEAM_SENT_SOLUTION,
         RESULT_OF_SOLUTION,
+        
         TEAM_BEGAN_TO_COMPLETE_TASK
     }
 }

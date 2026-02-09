@@ -22,8 +22,8 @@ public class Submission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "complition_time", nullable = false, columnDefinition = "INTERVAL")
     @JdbcTypeCode(SqlTypes.INTERVAL_SECOND)
-    @Column(name = "complition_time", nullable = false)
     private Duration complitionTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,6 +48,7 @@ public class Submission {
     private String language;
 
     public enum SubmissionStatus {
+        NEW,
         OK,
         FAILED,
         IN_PROCESS

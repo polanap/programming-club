@@ -1,11 +1,13 @@
 package com.itmo.programmingclub.controller;
 
+import com.itmo.programmingclub.model.dto.EventDTO;
 import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -30,8 +32,9 @@ public class EventController {
     }
 
     @GetMapping("/class/{classId}")
-    public ResponseEntity<List<Event>> getEventsByClass(@PathVariable Integer classId) {
-        return ResponseEntity.ok(eventService.findByClassId(classId));
+    @PreAuthorize("hasAnyRole('CURATOR', 'MANAGER')")
+    public ResponseEntity<List<EventDTO>> getEventsByClass(@PathVariable Integer classId) {
+        return ResponseEntity.ok(eventService.findDTOsByClassId(classId));
     }
 
     @GetMapping("/team/{teamId}")

@@ -55,6 +55,11 @@ public class TeamChangeRequestController {
         }
     }
 
+    @GetMapping("/class/{classId}")
+    public ResponseEntity<List<TeamChangeRequestResponseDTO>> getTeamChangeRequestsByClass(@PathVariable Integer classId) {
+        return ResponseEntity.ok(teamChangeRequestService.findByClassId(classId));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<Void> createTeamChangeRequest(@Valid @RequestBody TeamChangeRequestDTO dto,
