@@ -1,21 +1,29 @@
 package com.itmo.programmingclub.repository;
 
-import com.itmo.programmingclub.model.entity.Event;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.itmo.programmingclub.model.entity.Event;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Integer> {
-    List<Event> findByClassEntityId(Integer classId);
-    List<Event> findByTimeBetween(OffsetDateTime startTime, OffsetDateTime endTime);
-    List<Event> findByClassEntityIdAndTimeBetween(Integer classId, OffsetDateTime startTime, OffsetDateTime endTime);
-    List<Event> findByTeamId(Integer teamId);
+    @Query("SELECT e FROM Event e WHERE e.classEntity.id = :classId ORDER BY e.time DESC")
+    List<Event> findByClassEntityId(@Param("classId") Integer classId);
+    
+    @Query("SELECT e FROM Event e WHERE e.time BETWEEN :startTime AND :endTime ORDER BY e.time DESC")
+    List<Event> findByTimeBetween(@Param("startTime") OffsetDateTime startTime, @Param("endTime") OffsetDateTime endTime);
+    
+    @Query("SELECT e FROM Event e WHERE e.classEntity.id = :classId AND e.time BETWEEN :startTime AND :endTime ORDER BY e.time DESC")
+    List<Event> findByClassEntityIdAndTimeBetween(@Param("classId") Integer classId, @Param("startTime") OffsetDateTime startTime, @Param("endTime") OffsetDateTime endTime);
+    
+    @Query("SELECT e FROM Event e WHERE e.team.id = :teamId ORDER BY e.time DESC")
+    List<Event> findByTeamId(@Param("teamId") Integer teamId);
     
     /**
      * Finds events for a team filtered by event types, ordered by time descending.
