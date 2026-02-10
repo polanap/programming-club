@@ -244,8 +244,8 @@ export const classSessionAPI = {
     api.post(`/class-session/team/${teamId}/toggle-hand`),
   selectTask: (teamId: number, taskId: number): Promise<AxiosResponse<void>> => 
     api.post(`/class-session/team/${teamId}/select-task/${taskId}`),
-  submitSolution: (teamId: number, taskId: number, solution?: string): Promise<AxiosResponse<any>> => 
-    api.post(`/class-session/team/${teamId}/submit-solution/${taskId}`, solution || null),
+  submitSolution: (teamId: number, taskId: number, solution?: string, language?: string): Promise<AxiosResponse<any>> => 
+    api.post(`/class-session/team/${teamId}/submit-solution/${taskId}`, { solution: solution || null, language: language || 'python' }),
   getClassEvents: (classId: number): Promise<AxiosResponse<any[]>> => 
     api.get(`/events/class/${classId}`),
   getTeamStatus: (teamId: number): Promise<AxiosResponse<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null }>> => 
@@ -254,6 +254,8 @@ export const classSessionAPI = {
     api.get(`/class-session/team/${teamId}/is-curator-joined`),
   getJoinedCurators: (teamId: number): Promise<AxiosResponse<number[]>> => 
     api.get(`/class-session/team/${teamId}/joined-curators`),
+  getTeamSubmissions: (teamId: number): Promise<AxiosResponse<any[]>> => 
+    api.get(`/class-session/team/${teamId}/submissions`),
 };
 
 export default api;
