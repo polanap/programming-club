@@ -28,7 +28,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
   const isConnectedRef = useRef(false);
   const currentTeamIdRef = useRef<number | null>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const receivedCodesRef = useRef<Array<{ fromUserId: string; code: string; timestamp: number }>>([]);
+  const receivedCodesRef = useRef<Array<{ fromUserId: string; code: string; userRole?: string; timestamp: number }>>([]);
   
   const userStr = localStorage.getItem('user');
   const user: AuthUser | null = userStr ? JSON.parse(userStr) : null;
@@ -199,6 +199,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
                     code: currentArea?.code || '',
                     fromUserId: user?.username,
                     requestingUserId: request.requestingUserId, // Include requesting user ID so new user can filter
+                    userRole: getUserRole(), // Include user role
                   }),
                 });
               }
@@ -227,10 +228,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
               return;
             }
             
-            // Store received code with timestamp
+            // Store received code with timestamp and role
             receivedCodesRef.current.push({
               fromUserId: sync.fromUserId,
               code: sync.code || '',
+              userRole: (sync as any).userRole,
               timestamp: Date.now(),
             });
             
@@ -273,7 +275,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
                     newAreas.set(codeData.fromUserId, {
                       userId: codeData.fromUserId,
                       username: codeData.fromUserId,
-                      userRole: 'STUDENT', // Will be updated when we receive changes
+                      userRole: codeData.userRole || 'STUDENT', // Use role from sync message
                       code: codeData.code,
                       isEditable: false, // Not editable by current user
                     });
@@ -321,6 +323,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
                     newAreas.set(change.userId, {
                       ...existing,
                       code: change.content || '',
+                      userRole: change.userRole || existing.userRole, // Update role if provided
                     });
                   } else {
                     // Create new area with full code
@@ -469,6 +472,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ teamId, taskId, isElder, isCura
           content: newCode, // Send full code instead of single line
           position: currentPos,
           userId: user.username,
+          userRole: getUserRole(), // Include user role
         };
         console.log('Sending full code change to server, length:', newCode.length);
         stompClientRef.current.publish({

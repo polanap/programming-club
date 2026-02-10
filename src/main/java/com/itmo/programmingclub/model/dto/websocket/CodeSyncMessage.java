@@ -14,5 +14,6 @@ public class CodeSyncMessage {
     private String requestingUserId; // User who requested the code
     private String fromUserId; // User who is sending the code (in response)
     private String toUserId; // User who should receive the code (in response)
+    private String userRole; // Role of the user sending the code (STUDENT, ELDER, CURATOR)
 }
 

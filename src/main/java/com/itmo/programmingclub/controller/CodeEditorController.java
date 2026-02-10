@@ -174,10 +174,11 @@ public class CodeEditorController {
 
         message.setFromUserId(fromUserId);
         message.setTeamId(teamId);
+        message.setUserRole(determineUserRole(userDetails, teamId));
         // requestingUserId is already set by client
 
-        log.info("User {} sent code for team {} (requested by {}). Code length: {}", 
-                fromUserId, teamId, message.getRequestingUserId(),
+        log.info("User {} (role: {}) sent code for team {} (requested by {}). Code length: {}", 
+                fromUserId, message.getUserRole(), teamId, message.getRequestingUserId(),
                 message.getCode() != null ? message.getCode().length() : 0);
         
         return message;

@@ -43,8 +43,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Register WebSocket endpoint
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:*")
-                .withSockJS(); // Fallback for browsers that don't support WebSocket
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 
     @Override
