@@ -2,6 +2,7 @@ import React, { useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { RoleEnum } from '../../types';
+import Breadcrumbs from '../breadcrumbs/Breadcrumbs';
 import styles from './Header.module.scss';
 import '../../App.css';
 
@@ -30,19 +31,22 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <div className={styles.header}>
-      <h1>Кружок по программированию</h1>
-      <div className={styles.headerActions}>
-        {user && (
-          <>
-            <span>
-              {user.username} ({user.roles.map(getRoleName).join(', ')})
-            </span>
-            <button onClick={handleLogout}>Выход</button>
-          </>
-        )}
+    <>
+      <div className={styles.header}>
+        <h1>Кружок по программированию</h1>
+        <div className={styles.headerActions}>
+          {user && (
+            <>
+              <span>
+                {user.username} ({user.roles.map(getRoleName).join(', ')})
+              </span>
+              <button onClick={handleLogout}>Выход</button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      <Breadcrumbs />
+    </>
   );
 };
 
