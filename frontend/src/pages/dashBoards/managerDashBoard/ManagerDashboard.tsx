@@ -12,45 +12,8 @@ interface TransferRequest {
 }
 
 const ManagerDashboard: React.FC = () => {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [transferRequests, setTransferRequests] = useState<TransferRequest[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  const loadData = useCallback(async () => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-
-      const user: AuthUser = JSON.parse(userStr);
-      const [groupsRes, usersRes, requestsRes] = await Promise.all([
-        groupAPI.getMyManagerGroups(),
-        userAPI.getAll(),
-        transferRequestAPI.getMyManagerRequests().catch(() => ({ data: [] })),
-      ]);
-      setGroups(groupsRes.data);
-      setUsers(usersRes.data);
-      setTransferRequests(Array.isArray(requestsRes.data) ? requestsRes.data : []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  if (loading) {
-    return (
-      <div>
-        <Header />
-        <div className={styles.loading}>Загрузка...</div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -61,17 +24,12 @@ const ManagerDashboard: React.FC = () => {
         <div className={styles.dashboardGrid}>
           <div className={styles.dashboardCard} onClick={() => navigate('/manager/groups')}>
             <h3>Группы</h3>
-            <p>Всего групп: {groups.length}</p>
-          </div>
-          
-          <div className={styles.dashboardCard} onClick={() => navigate('/manager/users')}>
-            <h3>Пользователи</h3>
-            <p>Всего пользователей: {users.length}</p>
+            <p>Создание новых групп и управление группами, менеджером которых вы являетесь</p>
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/manager/transfer-requests')}>
             <h3>Заявки на перевод</h3>
-            <p>Новых заявок: {Array.isArray(transferRequests) ? transferRequests.filter(r => r.status === 'NEW').length : 0}</p>
+            <p>Заявки на перевод в другую группу</p>
           </div>
           
           <div className={styles.dashboardCard} onClick={() => navigate('/manager/activation')}>
