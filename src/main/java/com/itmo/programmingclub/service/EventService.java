@@ -1,18 +1,20 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.model.dto.EventDTO;
-import com.itmo.programmingclub.model.entity.Event;
-import com.itmo.programmingclub.repository.EventRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.itmo.programmingclub.model.dto.EventDTO;
+import com.itmo.programmingclub.model.entity.Event;
+import com.itmo.programmingclub.repository.EventRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -25,15 +27,26 @@ public class EventService {
     public Event createEvent(Event event) {
         Event savedEvent = eventRepository.save(event);
         
+        EventDTO eventDTO = EventDTO.fromEntity(savedEvent);
+        
         // Send event to WebSocket topic if it's team-related
         if (savedEvent.getTeam() != null) {
             Integer teamId = savedEvent.getTeam().getId();
-            EventDTO eventDTO = EventDTO.fromEntity(savedEvent);
             
             // Send to team-specific topic
-            String topic = "/topic/team/" + teamId + "/events";
-            messagingTemplate.convertAndSend(topic, eventDTO);
-            log.debug("Sent event {} to topic {}", savedEvent.getType(), topic);
+            String teamTopic = "/topic/team/" + teamId + "/events";
+            messagingTemplate.convertAndSend(teamTopic, eventDTO);
+            log.info("Sent event {} to topic {}", savedEvent.getType(), teamTopic);
+        }
+        
+        // Send event to class-level topic for curators
+        if (savedEvent.getClassEntity() != null) {
+            Integer classId = savedEvent.getClassEntity().getId();
+            
+            // Send to class-specific topic
+            String classTopic = "/topic/class/" + classId + "/events";
+            messagingTemplate.convertAndSend(classTopic, eventDTO);
+            log.info("Sent event {} to class topic {}", savedEvent.getType(), classTopic);
         }
         
         return savedEvent;
