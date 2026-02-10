@@ -126,6 +126,11 @@ const ClassRoom: React.FC = () => {
           // If joined to a team, load initial team status, curators and tasks
           if (joinedTeamId) {
             try {
+              // Load tasks first (needed for selected task lookup)
+              const tasksRes = await classAPI.getTasks(parseInt(classId));
+              const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+              setTasks(tasksData);
+              
               // Load initial team status
               const statusRes = await classSessionAPI.getTeamStatus(joinedTeamId);
               setTeamStatus(statusRes.data);
@@ -133,11 +138,6 @@ const ClassRoom: React.FC = () => {
               // Load joined curators
               const curatorsRes = await classSessionAPI.getJoinedCurators(joinedTeamId);
               setJoinedCurators(Array.isArray(curatorsRes.data) ? curatorsRes.data : []);
-              
-              // Load tasks
-              const tasksRes = await classAPI.getTasks(parseInt(classId));
-              const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
-              setTasks(tasksData);
               
               // Set selected task if there's one in status
               if (statusRes.data.selectedTaskId) {
@@ -170,7 +170,7 @@ const ClassRoom: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [classId, user?.id, isStudent, isCurator, navigate, teamStatus?.selectedTaskId]);
+  }, [classId, user?.id, isStudent, isCurator, navigate]);
 
   // Load class data on mount (without auto-joining)
   // Note: Joining happens only when user clicks "Join Class" button in StudentGroupClasses/CuratorGroupClasses
@@ -183,6 +183,44 @@ const ClassRoom: React.FC = () => {
       setJoined(true);
     }
   }, [loadClassData, isManager]);
+  
+  // Reload data when curator joins a team (for page refresh scenario)
+  useEffect(() => {
+    if (isCurator && curatorJoinedTeamId && classId) {
+      // Reload tasks and team status when curator joins a team
+      const reloadCuratorData = async () => {
+        try {
+          // Load tasks
+          const tasksRes = await classAPI.getTasks(parseInt(classId));
+          const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+          setTasks(tasksData);
+          
+          // Load team status
+          const statusRes = await classSessionAPI.getTeamStatus(curatorJoinedTeamId);
+          setTeamStatus(statusRes.data);
+          
+          // Load joined curators
+          const curatorsRes = await classSessionAPI.getJoinedCurators(curatorJoinedTeamId);
+          setJoinedCurators(Array.isArray(curatorsRes.data) ? curatorsRes.data : []);
+          
+          // Set selected task if there's one in status
+          if (statusRes.data.selectedTaskId) {
+            const task = tasksData.find((t: Task) => t.id === statusRes.data.selectedTaskId);
+            if (task) {
+              setSelectedTaskForTeam(task);
+              if (!selectedTask) {
+                setSelectedTask(task);
+              }
+            }
+          }
+        } catch (err: any) {
+          console.error('Error reloading curator data:', err);
+        }
+      };
+      
+      reloadCuratorData();
+    }
+  }, [isCurator, curatorJoinedTeamId, classId]);
 
   // Cleanup: leave class on unmount (only if user was joined)
   useEffect(() => {
