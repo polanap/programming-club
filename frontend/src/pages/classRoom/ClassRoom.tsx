@@ -7,6 +7,7 @@ import CodeEditor from '../../components/codeEditor/CodeEditor';
 import TaskList from '../../components/taskList/TaskList';
 import HandRaiseButton from '../../components/handRiseButton/HandRaiseButton';
 import EventLog from '../../components/eventLog/EventLog';
+import SubmissionList from '../../components/submissionList/SubmissionList';
 import { classAPI, taskAPI, teamAPI, classSessionAPI } from '../../services/api';
 import { Class, Task, Team, TeamResponseDTO, AuthUser, RoleEnum, EventDTO } from '../../types';
 import styles from './ClassRoom.module.scss';
@@ -19,12 +20,14 @@ const ClassRoom: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedTaskForTeam, setSelectedTaskForTeam] = useState<Task | null>(null); 
   const [elderCode, setElderCode] = useState<string>(''); 
+  const [submissionLanguage, setSubmissionLanguage] = useState<string>('java'); // Default to java
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [teamStatus, setTeamStatus] = useState<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null } | null>(null);
   const [joined, setJoined] = useState<boolean>(false);
   const [showEventLog, setShowEventLog] = useState<boolean>(false);
   const [showEventLogSidebar, setShowEventLogSidebar] = useState<boolean>(true); // For curators
+  const [showSubmissionsSidebar, setShowSubmissionsSidebar] = useState<boolean>(true); // For students
   const [allTeams, setAllTeams] = useState<TeamResponseDTO[]>([]);
   const [showTeamsModal, setShowTeamsModal] = useState<boolean>(false);
   const [teamStatuses, setTeamStatuses] = useState<Record<number, { isBlocked: boolean; isCuratorJoined: boolean; handRaised: boolean; loading: boolean }>>({});
@@ -268,13 +271,13 @@ const ClassRoom: React.FC = () => {
     
     try {
       // Get solution from elder's code area
-      await classSessionAPI.submitSolution(team.id, selectedTaskForTeam.id, elderCode);
+      await classSessionAPI.submitSolution(team.id, selectedTaskForTeam.id, elderCode, submissionLanguage);
       alert('Решение отправлено на проверку');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Ошибка при отправке решения';
       alert(errorMsg);
     }
-  }, [team, selectedTaskForTeam, elderCode]);
+  }, [team, selectedTaskForTeam, elderCode, submissionLanguage]);
 
   const handleLeaveClass = useCallback(async () => {
     if (!classId || !joined) return;
@@ -795,6 +798,14 @@ const ClassRoom: React.FC = () => {
               {showEventLogSidebar ? 'Скрыть лог событий' : 'Показать лог событий'}
             </button>
           )}
+          {isStudent && team && (
+            <button
+              className={styles.eventLogButton}
+              onClick={() => setShowSubmissionsSidebar(!showSubmissionsSidebar)}
+            >
+              {showSubmissionsSidebar ? 'Скрыть мои попытки' : 'Показать мои попытки'}
+            </button>
+          )}
           {joined && !isManager && (
             <button
               className={styles.leaveButton}
@@ -912,12 +923,26 @@ const ClassRoom: React.FC = () => {
                       {isElder && (
                         <>
                           {selectedTaskForTeam && teamStatus && !teamStatus.isBlocked && (
-                            <button 
-                              className={styles.submitButton}
-                              onClick={handleSubmitSolution}
-                            >
-                              Отправить решение
-                            </button>
+                            <>
+                              <div className={styles.languageSelector}>
+                                <label htmlFor="submission-language">Язык программирования:</label>
+                                <select
+                                  id="submission-language"
+                                  value={submissionLanguage}
+                                  onChange={(e) => setSubmissionLanguage(e.target.value)}
+                                  className={styles.languageSelect}
+                                >
+                                  <option value="python">Python</option>
+                                  <option value="java">Java</option>
+                                </select>
+                              </div>
+                              <button 
+                                className={styles.submitButton}
+                                onClick={handleSubmitSolution}
+                              >
+                                Отправить решение
+                              </button>
+                            </>
                           )}
                           {teamStatus?.isBlocked && (
                             <div className={styles.blockedWarning}>
@@ -980,10 +1005,15 @@ const ClassRoom: React.FC = () => {
             )}
           </div>
           
-          {/* Right sidebar: EventLog for curators */}
+          {/* Right sidebar: EventLog for curators, SubmissionList for students */}
           {isCurator && classId && showEventLogSidebar && (
             <div className={styles.eventLogSidebar}>
               <EventLog classId={parseInt(classId)} inline={true} />
+            </div>
+          )}
+          {isStudent && team && showSubmissionsSidebar && (
+            <div className={styles.submissionsSidebar}>
+              <SubmissionList teamId={team.id} inline={true} />
             </div>
           )}
         </div>

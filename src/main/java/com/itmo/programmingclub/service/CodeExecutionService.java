@@ -1,5 +1,14 @@
 package com.itmo.programmingclub.service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.github.codeboy.piston4j.api.CodeFile;
 import com.github.codeboy.piston4j.api.ExecutionRequest;
 import com.github.codeboy.piston4j.api.ExecutionResult;
@@ -9,18 +18,10 @@ import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.model.entity.Submission;
 import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.model.entity.Test;
-import com.itmo.programmingclub.repository.EventRepository;
 import com.itmo.programmingclub.repository.SubmissionRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ import java.util.List;
 public class CodeExecutionService {
 
     private final SubmissionRepository submissionRepository;
-    private final EventRepository eventRepository;
+    private final EventService eventService;
     private final Piston piston;
 
     @Async
@@ -46,12 +47,11 @@ public class CodeExecutionService {
         String sourceCode = submission.getCode();
         String language = submission.getLanguage();
 
-        log.info("Starting Piston execution for submission {}", submissionId);
+        log.info("Starting Piston execution for submission {}, language: {}", submissionId, language);
         Instant start = Instant.now();
 
         try {
-            Runtime runtime = piston.getRuntime(language)
-                    .orElseThrow(() -> new IllegalArgumentException("Language not found: " + language));
+            Runtime runtime = findRuntimeForLanguage(language);
 
             if (tests.isEmpty()) {
                 log.warn("Task {} has no tests. Marking as OK.", task.getId());
@@ -106,7 +106,7 @@ public class CodeExecutionService {
         event.setTask(submission.getTask());
         event.setClassEntity(submission.getTeam().getClassEntity());
 
-        eventRepository.save(event);
+        eventService.createEvent(event);
     }
 
     private ExecutionResult runCode(Runtime runtime, String code, String language, String stdin) {
@@ -129,5 +129,33 @@ public class CodeExecutionService {
             case "python", "py" -> "main.py";
             default -> "code.txt";
         };
+    }
+    
+    /**
+     * Finds a Runtime for the given language by trying multiple possible names.
+     * Piston API uses specific language identifiers that may differ from our internal representation.
+     */
+    private Runtime findRuntimeForLanguage(String language) {
+        if (language == null || language.trim().isEmpty()) {
+            language = "java";
+        }
+        String normalized = language.toLowerCase().trim();
+        
+        String[] possibleNames = switch (normalized) {
+            case "java" -> new String[]{"java", "java-17", "openjdk", "openjdk-17"};
+            case "python", "py" -> new String[]{"python3", "python", "python-3"};
+            default -> new String[]{normalized};
+        };
+        
+        for (String name : possibleNames) {
+            java.util.Optional<Runtime> runtimeOpt = piston.getRuntime(name);
+            if (runtimeOpt.isPresent()) {
+                log.debug("Found Piston runtime '{}' for language '{}'", name, language);
+                return runtimeOpt.get();
+            }
+        }
+        
+        throw new IllegalArgumentException("Language not found in Piston API: " + language + 
+                " (tried: " + String.join(", ", possibleNames) + ")");
     }
 }

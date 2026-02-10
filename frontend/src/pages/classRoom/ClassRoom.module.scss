@@ -82,6 +82,15 @@
   flex-direction: column;
 }
 
+.submissionsSidebar {
+  width: 33.33%; /* Approximately one third of the page width */
+  border-left: 1px solid #ddd;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .taskSidebar {
   width: 300px;
   border-right: 1px solid #ddd;
@@ -160,6 +169,38 @@
 }.errorContainer {
   padding: 20px;
   text-align: center;
+}
+
+.languageSelector {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.languageSelect {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #999;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
 }
 
 .submitButton {

@@ -337,3 +337,13 @@ export interface Event {
   classId?: number;
   taskId?: number;
 }
+
+export type SubmissionStatus = 'NEW' | 'OK' | 'FAILED' | 'IN_PROCESS';
+
+export interface Submission {
+  id: number;
+  complitionTime: string; // ISO 8601 duration format (e.g., "PT1H30M")
+  taskId: number;
+  teamId: number;
+  status: SubmissionStatus;
+}
