@@ -11,6 +11,6 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByAuthorId(Integer authorId);
     List<Task> findByIsOpenTrue();
-    List<Task> findByAuthorIdOrIsOpenTrue(Integer authorId, Boolean isOpen);
+    List<Task> findByAuthorIdOrIsOpenTrueOrderByIdDesc(Integer authorId, Boolean isOpen);
 }
 

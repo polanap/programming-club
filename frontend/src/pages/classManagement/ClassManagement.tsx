@@ -24,7 +24,8 @@ const ClassManagement: React.FC = () => {
       loadAvailableTasks();
       loadClassDetails();
     }
-  }, [showEditModal, selectedClass]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showEditModal, selectedClass?.id]);
 
   const loadData = async () => {
     try {
