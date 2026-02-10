@@ -4,12 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.itmo.programmingclub.model.dto.SubmissionDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.itmo.programmingclub.exceptions.NotFoundException;
 import com.itmo.programmingclub.model.RoleEnum;
+import com.itmo.programmingclub.model.dto.SubmissionDTO;
 import com.itmo.programmingclub.model.entity.Class;
 import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.model.entity.Submission;
@@ -283,7 +283,7 @@ public class ClassSessionService {
      * Creates an event for submission.
      * Note: The actual testing logic should be handled separately and create RESULT_OF_SOLUTION event.
      */
-    public Submission submitSolution(Integer teamId, Integer taskId, String solution, String username) {
+    public Submission submitSolution(Integer teamId, Integer taskId, String solution, String language, String username) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new NotFoundException("Team not found"));
         
@@ -311,6 +311,14 @@ public class ClassSessionService {
             throw new IllegalArgumentException("Задача не привязана к этому занятию");
         }
         
+        if (language == null || language.trim().isEmpty()) {
+            language = "java";
+        }
+        language = language.toLowerCase();
+        if (!language.equals("python") && !language.equals("java")) {
+            throw new IllegalArgumentException("Язык не поддерживается");
+        }
+        
         // Create submission (completion time would need to be calculated based on when task was selected)
         // For now, we'll use a placeholder duration
         Submission submission = new Submission();
@@ -318,7 +326,7 @@ public class ClassSessionService {
         submission.setTask(task);
         submission.setStatus(Submission.SubmissionStatus.NEW);
         submission.setCode(solution);
-        submission.setLanguage("python");
+        submission.setLanguage(language);
         submission.setComplitionTime(java.time.Duration.ofMinutes(0)); // Should be calculated properly
         
         Submission savedSubmission = submissionService.createSubmission(submission);
@@ -342,6 +350,19 @@ public class ClassSessionService {
         Submission submission = submissionService.findById(submissionId)
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
         return SubmissionDTO.fromEntity(submission);
+    }
+
+    /**
+     * Gets all submissions for a team.
+     */
+    public List<SubmissionDTO> getTeamSubmissions(Integer teamId) {
+        teamRepository.findById(teamId)
+                .orElseThrow(() -> new NotFoundException("Team not found"));
+        
+        List<Submission> submissions = submissionService.findByTeamIdOrderByIdDesc(teamId);
+        return submissions.stream()
+                .map(SubmissionDTO::fromEntity)
+                .toList();
     }
 
     /**

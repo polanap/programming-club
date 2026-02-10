@@ -1,20 +1,28 @@
 package com.itmo.programmingclub.controller;
 
-import com.itmo.programmingclub.model.dto.SubmissionDTO;
-import com.itmo.programmingclub.model.entity.Submission;
-import com.itmo.programmingclub.model.entity.Task;
-import com.itmo.programmingclub.service.ClassSessionService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.itmo.programmingclub.model.dto.SubmissionDTO;
+import com.itmo.programmingclub.model.entity.Submission;
+import com.itmo.programmingclub.model.entity.Task;
+import com.itmo.programmingclub.service.ClassSessionService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/class-session")
@@ -100,9 +108,11 @@ public class ClassSessionController {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<SubmissionDTO> submitSolution(@PathVariable Integer teamId,
                                                       @PathVariable Integer taskId,
-                                                      @RequestBody(required = false) String solution,
+                                                      @RequestBody(required = false) Map<String, String> requestBody,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
-        Submission submission = classSessionService.submitSolution(teamId, taskId, solution, userDetails.getUsername());
+        String solution = requestBody != null ? requestBody.get("solution") : null;
+        String language = requestBody != null ? requestBody.get("language") : "python"; // Default to python
+        Submission submission = classSessionService.submitSolution(teamId, taskId, solution, language, userDetails.getUsername());
         return ResponseEntity.ok(SubmissionDTO.fromEntity(submission));
     }
 
@@ -110,6 +120,12 @@ public class ClassSessionController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SubmissionDTO> getSubmissionStatus(@PathVariable Integer submissionId) {
         return ResponseEntity.ok(classSessionService.getSubmissionDetails(submissionId));
+    }
+
+    @GetMapping("/team/{teamId}/submissions")
+    @PreAuthorize("hasAnyRole('STUDENT', 'CURATOR')")
+    public ResponseEntity<List<SubmissionDTO>> getTeamSubmissions(@PathVariable Integer teamId) {
+        return ResponseEntity.ok(classSessionService.getTeamSubmissions(teamId));
     }
 
     @GetMapping("/team/{teamId}/status")

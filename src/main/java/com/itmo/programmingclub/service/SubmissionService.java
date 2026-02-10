@@ -1,15 +1,15 @@
 package com.itmo.programmingclub.service;
 
-import com.itmo.programmingclub.exceptions.NotFoundException;
-import com.itmo.programmingclub.model.dto.SubmissionDTO;
-import com.itmo.programmingclub.model.entity.Submission;
-import com.itmo.programmingclub.repository.SubmissionRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import com.itmo.programmingclub.model.entity.Submission;
+import com.itmo.programmingclub.repository.SubmissionRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +31,10 @@ public class SubmissionService {
 
     public List<Submission> findByTeamId(Integer teamId) {
         return submissionRepository.findByTeamId(teamId);
+    }
+
+    public List<Submission> findByTeamIdOrderByIdDesc(Integer teamId) {
+        return submissionRepository.findByTeamIdOrderByIdDesc(teamId);
     }
 
     public List<Submission> findByTaskId(Integer taskId) {
