@@ -192,6 +192,18 @@ export interface CodeChangeMessage {
   content: string;
   position: number;
   userId: string;
+  userRole?: string;
+}
+
+export interface EventDTO {
+  id: number;
+  time: string;
+  type: string;
+  teamId: number | null;
+  userRoleId: number | null;
+  submissionId: number | null;
+  classId: number | null;
+  taskId: number | null;
 }
 
 export interface LockMessage {
@@ -298,4 +310,40 @@ export interface Test {
   input: string;
   output: string;
   taskId: number;
+}
+
+export type EventType = 
+  | 'TEAM_RAISED_HAND'
+  | 'TEAM_LOWERED_HAND'
+  | 'CURATOR_BLOCKED_TEAM'
+  | 'CURATOR_UNBLOCKED_TEAM'
+  | 'CURATOR_JOINED_TEAM'
+  | 'CURATOR_LEFT_TEAM'
+  | 'CURATOR_JOINED_CLASS'
+  | 'CURATOR_LEFT_CLASS'
+  | 'STUDENT_JOINED_CLASS'
+  | 'STUDENT_LEFT_CLASS'
+  | 'TEAM_SENT_SOLUTION'
+  | 'RESULT_OF_SOLUTION'
+  | 'TEAM_BEGAN_TO_COMPLETE_TASK';
+
+export interface Event {
+  id: number;
+  time: string;
+  type: EventType;
+  teamId?: number;
+  userRoleId?: number;
+  submissionId?: number;
+  classId?: number;
+  taskId?: number;
+}
+
+export type SubmissionStatus = 'NEW' | 'OK' | 'FAILED' | 'IN_PROCESS';
+
+export interface Submission {
+  id: number;
+  complitionTime: string; // ISO 8601 duration format (e.g., "PT1H30M")
+  taskId: number;
+  teamId: number;
+  status: SubmissionStatus;
 }

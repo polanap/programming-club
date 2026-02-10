@@ -1,5 +1,15 @@
 package com.itmo.programmingclub.controller;
 
+import java.util.Arrays;
+import java.util.Optional;
+
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+
 import com.itmo.programmingclub.model.dto.websocket.CodeChangeMessage;
 import com.itmo.programmingclub.model.dto.websocket.CodeSyncMessage;
 import com.itmo.programmingclub.model.dto.websocket.CursorPositionMessage;
@@ -9,17 +19,9 @@ import com.itmo.programmingclub.model.entity.User;
 import com.itmo.programmingclub.security.CustomUserDetails;
 import com.itmo.programmingclub.service.CodeEditorService;
 import com.itmo.programmingclub.service.TeamService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-
-import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * WebSocket controller for code editing collaboration
@@ -52,25 +54,23 @@ public class CodeEditorController {
         message.setUserRole(userRole);
         message.setTeamId(teamId);
 
-        // Check if line is locked by someone else
-        if (message.getLineNumber() != null && 
-            codeEditorService.isLineLockedByOther(teamId, message.getLineNumber(), userId)) {
-            log.warn("User {} attempted to edit locked line {} in team {}", 
-                    userId, message.getLineNumber(), teamId);
-            // Send rejection message to the user
-            messagingTemplate.convertAndSendToUser(
-                    userId, 
-                    "/queue/code/reject", 
-                    message);
-            return null; // Don't broadcast the change
+        // No need for line locking since each user has their own area
+        // Users can only edit their own area, so no conflicts
+
+        // Update code in service for this specific user - replace entire code
+        // When content contains newlines, it's the full code, otherwise it's a single line
+        String newCode;
+        if (message.getContent() != null && message.getContent().contains("\n")) {
+            // Full code is being sent
+            newCode = message.getContent();
+        } else {
+            // Single line update (legacy support)
+            String currentCode = codeEditorService.getUserCode(teamId, userId);
+            newCode = applyChange(currentCode, message);
         }
+        codeEditorService.updateUserCode(teamId, userId, newCode);
 
-        // Update code in service
-        String currentCode = codeEditorService.getTeamCode(teamId);
-        // Simple code update logic (in production, you'd use a more sophisticated diff algorithm)
-        codeEditorService.updateTeamCode(teamId, applyChange(currentCode, message));
-
-        log.debug("Code change from user {} in team {}: {}", userId, teamId, message.getType());
+        log.debug("Code change from user {} in team {}: line {} updated", userId, teamId, message.getLineNumber());
         return message;
     }
 
@@ -133,12 +133,13 @@ public class CodeEditorController {
     }
 
     /**
-     * Handle code sync request (when user joins)
-     * Client sends to: /app/sync/{teamId}
-     * Server sends to: /user/{username}/queue/code/sync
+     * Handle code sync request (when new user joins)
+     * Client sends to: /app/code/sync/request/{teamId}
+     * Server broadcasts to: /topic/code/sync/request/{teamId}
      */
-    @MessageMapping("/sync/{teamId}")
-    public void handleCodeSync(
+    @MessageMapping("/code/sync/request/{teamId}")
+    @SendTo("/topic/code/sync/request/{teamId}")
+    public CodeSyncMessage handleCodeSyncRequest(
             @DestinationVariable Integer teamId,
             CodeSyncMessage message,
             Authentication authentication) {
@@ -149,12 +150,38 @@ public class CodeEditorController {
         // Add user to team connections
         codeEditorService.addUserConnection(teamId, userId);
 
-        // Send current code to the user
-        String currentCode = codeEditorService.getTeamCode(teamId);
-        CodeSyncMessage syncResponse = new CodeSyncMessage(teamId, currentCode, userId);
-        messagingTemplate.convertAndSendToUser(userId, "/queue/code/sync", syncResponse);
+        message.setRequestingUserId(userId);
+        message.setTeamId(teamId);
 
-        log.info("User {} synced with team {} code", userId, teamId);
+        log.info("User {} requested code sync for team {}", userId, teamId);
+        return message;
+    }
+
+    /**
+     * Handle code sync response (when participant sends code to new user)
+     * Client sends to: /app/code/sync/response/{teamId}
+     * Server broadcasts to: /topic/code/sync/response/{teamId}
+     */
+    @MessageMapping("/code/sync/response/{teamId}")
+    @SendTo("/topic/code/sync/response/{teamId}")
+    public CodeSyncMessage handleCodeSyncResponse(
+            @DestinationVariable Integer teamId,
+            CodeSyncMessage message,
+            Authentication authentication) {
+        
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String fromUserId = userDetails.getUsername();
+
+        message.setFromUserId(fromUserId);
+        message.setTeamId(teamId);
+        message.setUserRole(determineUserRole(userDetails, teamId));
+        // requestingUserId is already set by client
+
+        log.info("User {} (role: {}) sent code for team {} (requested by {}). Code length: {}", 
+                fromUserId, message.getUserRole(), teamId, message.getRequestingUserId(),
+                message.getCode() != null ? message.getCode().length() : 0);
+        
+        return message;
     }
 
     /**
@@ -184,8 +211,7 @@ public class CodeEditorController {
     }
 
     /**
-     * Simple code change application (for demonstration)
-     * In production, use Operational Transformation or CRDT algorithms
+     * Apply code change - replace entire line
      */
     private String applyChange(String currentCode, CodeChangeMessage change) {
         if (currentCode == null) {
@@ -195,34 +221,20 @@ public class CodeEditorController {
         String[] lines = currentCode.split("\n", -1);
         int lineIndex = change.getLineNumber() - 1; // Line numbers are 1-based
 
-        if (lineIndex < 0 || lineIndex >= lines.length) {
-            // Add new lines if needed
-            while (lines.length <= lineIndex) {
-                lines = Arrays.copyOf(lines, lines.length + 1);
-                lines[lines.length - 1] = "";
-            }
+        // Ensure line exists
+        if (lineIndex < 0) {
+            log.warn("Invalid line number: {}", change.getLineNumber());
+            return currentCode;
+        }
+        
+        // Add new lines if needed
+        while (lines.length <= lineIndex) {
+            lines = Arrays.copyOf(lines, lines.length + 1);
+            lines[lines.length - 1] = "";
         }
 
-        String line = lines[lineIndex];
-        switch (change.getType()) {
-            case "INSERT":
-                int pos = change.getPosition() != null ? change.getPosition() : line.length();
-                if (pos < 0) pos = 0;
-                if (pos > line.length()) pos = line.length();
-                lines[lineIndex] = line.substring(0, pos) + change.getContent() + line.substring(pos);
-                break;
-            case "DELETE":
-                pos = change.getPosition() != null ? change.getPosition() : line.length();
-                int length = change.getContent() != null ? change.getContent().length() : 1;
-                if (pos + length > line.length()) length = line.length() - pos;
-                if (pos >= 0 && pos < line.length()) {
-                    lines[lineIndex] = line.substring(0, pos) + line.substring(pos + length);
-                }
-                break;
-            case "REPLACE":
-                lines[lineIndex] = change.getContent() != null ? change.getContent() : "";
-                break;
-        }
+        // Replace entire line with new content
+        lines[lineIndex] = change.getContent() != null ? change.getContent() : "";
 
         return String.join("\n", lines);
     }

@@ -8,16 +8,70 @@
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 
   &.selected {
     background-color: #e7f3ff;
   }
+
+  &.selectedForTeam {
+    border-color: #28a745;
+    border-width: 2px;
+  }
+}
+
+.taskContent {
+  cursor: pointer;
+  flex: 1;
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.selectedBadge {
+  font-size: 11px;
+  padding: 2px 6px;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 3px;
+  font-weight: normal;
 }
 
 .taskDescription {
   font-size: 12px;
   color: #666;
   margin-top: 5px;
+}
+
+.selectButton {
+  width: 100%;
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+
+  &:disabled {
+    background-color: #28a745;
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+
+  &.selectedButton {
+    background-color: #28a745;
+  }
 }
 

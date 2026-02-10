@@ -1,26 +1,442 @@
 .container {
   display: flex;
+  flex-direction: column;
   height: calc(100vh - 80px);
+}
+
+.topControls {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f8f9fa;
+  
+  button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 36px;
+    white-space: nowrap;
+    
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
+
+.eventLogButton {
+  background-color: #17a2b8;
+  color: white;
+  
+  &:hover {
+    background-color: #138496;
+  }
+}
+
+.leaveButton {
+  background-color: #dc3545;
+  color: white;
+  
+  &:hover {
+    background-color: #c82333;
+  }
+}
+
+.mainContent {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 300px;
   border-right: 1px solid #ddd;
   padding: 20px;
+  overflow-y: auto;
+  background-color: #fff;
 }
 
 .content {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.curatorMainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-width: 0; /* Allow flex item to shrink below content size */
+}
+
+.eventLogSidebar {
+  width: 33.33%; /* Approximately one third of the page width */
+  border-left: 1px solid #ddd;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
   flex-direction: column;
+}
+
+.submissionsSidebar {
+  width: 33.33%; /* Approximately one third of the page width */
+  border-left: 1px solid #ddd;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.taskSidebar {
+  width: 300px;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.taskContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.teamsListContainer {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  
+  h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
 }
 
 .taskHeader {
   padding: 20px;
   border-bottom: 1px solid #ddd;
+  background-color: #f8f9fa;
+  
+  h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+  }
+}
+
+.taskCondition {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #555;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.selectedForTeamBadge {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.noTaskMessage {
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
 }
 
 .editorContainer {
   flex: 1;
 }
 
+.error {
+  background-color: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 20px;
+  border: 1px solid #fcc;
+}.errorContainer {
+  padding: 20px;
+  text-align: center;
+}
+
+.languageSelector {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.languageSelect {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #999;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #218838;
+  }
+}
+
+.blockedWarning {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.curatorJoinedNotification {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  text-align: center;
+  
+  strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.noTeamMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6c757d;
+  font-size: 16px;
+  text-align: center;
+  padding: 40px;
+}
+
+.curatorControls {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    width: 100%;
+    padding: 8px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+}
+
+.teamsButton {
+  background-color: #6c757d;
+  color: white;
+  
+  &:hover {
+    background-color: #5a6268;
+  }
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 90%;
+  
+  h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
+}
+
+.teamsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.teamCard {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+
+.teamHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  
+  h4 {
+    margin: 0;
+  }
+}
+
+.handRaisedIcon {
+  font-size: 20px;
+  margin-left: 10px;
+  cursor: default;
+}
+
+.blockedBadge {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.joinedBadge {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.teamDetails {
+  margin-bottom: 15px;
+  
+  p {
+    margin: 5px 0;
+  }
+  
+  ul {
+    margin: 5px 0;
+    padding-left: 20px;
+  }
+}
+
+.teamActions {
+  display: flex;
+  gap: 10px;
+  
+  button {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.button {
+  background-color: #007bff;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+}
+
+.buttonSecondary {
+  background-color: #6c757d;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: #5a6268;
+  }
+}
+
+.buttonDanger {
+  background-color: #dc3545;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: #c82333;
+  }
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
