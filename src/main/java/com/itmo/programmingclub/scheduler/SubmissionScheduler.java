@@ -1,16 +1,18 @@
 package com.itmo.programmingclub.scheduler;
 
-import com.itmo.programmingclub.model.entity.Submission;
-import com.itmo.programmingclub.repository.SubmissionRepository;
-import com.itmo.programmingclub.service.CodeExecutionService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.itmo.programmingclub.model.entity.Submission;
+import com.itmo.programmingclub.repository.SubmissionRepository;
+import com.itmo.programmingclub.service.CodeExecutionService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor

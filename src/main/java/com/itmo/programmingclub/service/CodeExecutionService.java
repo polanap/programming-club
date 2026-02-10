@@ -1,5 +1,14 @@
 package com.itmo.programmingclub.service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.github.codeboy.piston4j.api.CodeFile;
 import com.github.codeboy.piston4j.api.ExecutionRequest;
 import com.github.codeboy.piston4j.api.ExecutionResult;
@@ -9,18 +18,10 @@ import com.itmo.programmingclub.model.entity.Event;
 import com.itmo.programmingclub.model.entity.Submission;
 import com.itmo.programmingclub.model.entity.Task;
 import com.itmo.programmingclub.model.entity.Test;
-import com.itmo.programmingclub.repository.EventRepository;
 import com.itmo.programmingclub.repository.SubmissionRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ import java.util.List;
 public class CodeExecutionService {
 
     private final SubmissionRepository submissionRepository;
-    private final EventRepository eventRepository;
+    private final EventService eventService;
     private final Piston piston;
 
     @Async
@@ -106,7 +107,7 @@ public class CodeExecutionService {
         event.setTask(submission.getTask());
         event.setClassEntity(submission.getTeam().getClassEntity());
 
-        eventRepository.save(event);
+        eventService.createEvent(event);
     }
 
     private ExecutionResult runCode(Runtime runtime, String code, String language, String stdin) {
