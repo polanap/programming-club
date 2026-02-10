@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Client, IMessage } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import Header from '../../components/header/Header';
 import CodeEditor from '../../components/codeEditor/CodeEditor';
 import TaskList from '../../components/taskList/TaskList';
 import HandRaiseButton from '../../components/handRiseButton/HandRaiseButton';
 import EventLog from '../../components/eventLog/EventLog';
 import { classAPI, taskAPI, teamAPI, classSessionAPI } from '../../services/api';
-import { Class, Task, Team, TeamResponseDTO, AuthUser, RoleEnum } from '../../types';
+import { Class, Task, Team, TeamResponseDTO, AuthUser, RoleEnum, EventDTO } from '../../types';
 import styles from './ClassRoom.module.scss';
 
 const ClassRoom: React.FC = () => {
@@ -14,8 +16,9 @@ const ClassRoom: React.FC = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [team, setTeam] = useState<Team | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null); // Task being viewed (for condition display)
-  const [selectedTaskForTeam, setSelectedTaskForTeam] = useState<Task | null>(null); // Task selected by elder for team (for CodeEditor)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTaskForTeam, setSelectedTaskForTeam] = useState<Task | null>(null); 
+  const [elderCode, setElderCode] = useState<string>(''); 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [teamStatus, setTeamStatus] = useState<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null } | null>(null);
@@ -26,6 +29,11 @@ const ClassRoom: React.FC = () => {
   const [teamStatuses, setTeamStatuses] = useState<Record<number, { isBlocked: boolean; isCuratorJoined: boolean; loading: boolean }>>({});
   const [curatorJoinedTeamId, setCuratorJoinedTeamId] = useState<number | null>(null);
   const [joinedCurators, setJoinedCurators] = useState<number[]>([]);
+  
+  // WebSocket connection for team events
+  const stompClientRef = useRef<Client | null>(null);
+  const subscribedTeamIdsRef = useRef<Set<number>>(new Set());
+  const isConnectingRef = useRef<boolean>(false);
   
   const userStr = localStorage.getItem('user');
   const user: AuthUser | null = userStr ? JSON.parse(userStr) : null;
@@ -59,30 +67,27 @@ const ClassRoom: React.FC = () => {
         };
         setTeam(teamData);
         
-        // Load team status
-        let currentTeamStatus: { isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null } | null = null;
-        try {
-          const statusRes = await classSessionAPI.getTeamStatus(myTeam.teamId);
-          currentTeamStatus = statusRes.data;
-          setTeamStatus(currentTeamStatus);
-        } catch (err) {
-          console.error('Error loading team status:', err);
-        }
-        
-        // Load tasks - for students use classAPI.getTasks (validates session)
-        // For curators joined to a team, also load class tasks
+        // Load initial team status and curators for students
         if (isStudent && myTeam) {
           try {
+            // Load team status
+            const statusRes = await classSessionAPI.getTeamStatus(myTeam.teamId);
+            setTeamStatus(statusRes.data);
+            
+            // Load joined curators
+            const curatorsRes = await classSessionAPI.getJoinedCurators(myTeam.teamId);
+            setJoinedCurators(Array.isArray(curatorsRes.data) ? curatorsRes.data : []);
+            
+            // Load tasks
             const tasksRes = await classAPI.getTasks(parseInt(classId));
             const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
             setTasks(tasksData);
             
-            // Set selected task for team if there's one in status
-            if (currentTeamStatus?.selectedTaskId) {
-              const task = tasksData.find((t: Task) => t.id === currentTeamStatus.selectedTaskId);
+            // Set selected task if there's one in status
+            if (statusRes.data.selectedTaskId) {
+              const task = tasksData.find((t: Task) => t.id === statusRes.data.selectedTaskId);
               if (task) {
                 setSelectedTaskForTeam(task);
-                // Also set as viewed task if no task is being viewed
                 if (!selectedTask) {
                   setSelectedTask(task);
                 }
@@ -117,29 +122,31 @@ const ClassRoom: React.FC = () => {
             }
           }
           
-          // If joined to a team, load class tasks
+          // If joined to a team, load initial team status, curators and tasks
           if (joinedTeamId) {
             try {
+              // Load initial team status
+              const statusRes = await classSessionAPI.getTeamStatus(joinedTeamId);
+              setTeamStatus(statusRes.data);
+              
+              // Load joined curators
+              const curatorsRes = await classSessionAPI.getJoinedCurators(joinedTeamId);
+              setJoinedCurators(Array.isArray(curatorsRes.data) ? curatorsRes.data : []);
+              
+              // Load tasks
               const tasksRes = await classAPI.getTasks(parseInt(classId));
               const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
               setTasks(tasksData);
               
-              // Load team status and selected task
-              try {
-                const statusRes = await classSessionAPI.getTeamStatus(joinedTeamId);
-                setTeamStatus(statusRes.data);
-                
-                if (statusRes.data.selectedTaskId) {
-                  const task = tasksData.find((t: Task) => t.id === statusRes.data.selectedTaskId);
-                  if (task) {
-                    setSelectedTaskForTeam(task);
-                    if (!selectedTask) {
-                      setSelectedTask(task);
-                    }
+              // Set selected task if there's one in status
+              if (statusRes.data.selectedTaskId) {
+                const task = tasksData.find((t: Task) => t.id === statusRes.data.selectedTaskId);
+                if (task) {
+                  setSelectedTaskForTeam(task);
+                  if (!selectedTask) {
+                    setSelectedTask(task);
                   }
                 }
-              } catch (err) {
-                console.error('Error loading team status for curator:', err);
               }
             } catch (err: any) {
               console.error('Error loading class tasks for curator:', err);
@@ -203,9 +210,7 @@ const ClassRoom: React.FC = () => {
     
     try {
       await classSessionAPI.selectTask(team.id, task.id);
-      // Reload team status
-      const statusRes = await classSessionAPI.getTeamStatus(team.id);
-      setTeamStatus(statusRes.data);
+      // Status will be updated via WebSocket event
       setSelectedTaskForTeam(task);
       // Also set as viewed task
       setSelectedTask(task);
@@ -219,15 +224,14 @@ const ClassRoom: React.FC = () => {
     if (!team || !selectedTaskForTeam) return;
     
     try {
-      // Get solution from CodeEditor if available
-      // For now, just send empty string - CodeEditor should handle this
-      await classSessionAPI.submitSolution(team.id, selectedTaskForTeam.id);
+      // Get solution from elder's code area
+      await classSessionAPI.submitSolution(team.id, selectedTaskForTeam.id, elderCode);
       alert('Решение отправлено на проверку');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Ошибка при отправке решения';
       alert(errorMsg);
     }
-  }, [team, selectedTaskForTeam]);
+  }, [team, selectedTaskForTeam, elderCode]);
 
   const handleLeaveClass = useCallback(async () => {
     if (!classId || !joined) return;
@@ -247,35 +251,33 @@ const ClassRoom: React.FC = () => {
   }, [classId, joined, isStudent, isCurator, navigate]);
 
   const loadTeamStatuses = useCallback(async () => {
+    // Load initial statuses for all teams - check if current curator is joined
     if (!isCurator || allTeams.length === 0) return;
     
     const statusPromises = allTeams.map(async (team) => {
       try {
-        const [statusRes, joinedRes] = await Promise.all([
-          classSessionAPI.getTeamStatus(team.teamId),
-          classSessionAPI.isCuratorJoined(team.teamId)
-        ]);
+        const joinedRes = await classSessionAPI.isCuratorJoined(team.teamId);
         return {
           teamId: team.teamId,
-          status: {
-            isBlocked: statusRes.data.isBlocked,
-            isCuratorJoined: joinedRes.data.isJoined,
-            loading: false
-          }
+          isCuratorJoined: joinedRes.data.isJoined,
         };
       } catch (err) {
-        console.error(`Error loading status for team ${team.teamId}:`, err);
+        console.error(`Error checking curator join status for team ${team.teamId}:`, err);
         return {
           teamId: team.teamId,
-          status: { isBlocked: false, isCuratorJoined: false, loading: false }
+          isCuratorJoined: false,
         };
       }
     });
     
     const statuses = await Promise.all(statusPromises);
     const statusMap: Record<number, { isBlocked: boolean; isCuratorJoined: boolean; loading: boolean }> = {};
-    statuses.forEach(({ teamId, status }) => {
-      statusMap[teamId] = status;
+    statuses.forEach(({ teamId, isCuratorJoined }) => {
+      statusMap[teamId] = { 
+        isBlocked: false, 
+        isCuratorJoined, 
+        loading: false 
+      };
     });
     setTeamStatuses(statusMap);
   }, [isCurator, allTeams]);
@@ -297,10 +299,10 @@ const ClassRoom: React.FC = () => {
     
     try {
       await classSessionAPI.blockTeamSubmission(teamId, newBlocked);
-      const statusRes = await classSessionAPI.getTeamStatus(teamId);
+      // Status will be updated via WebSocket event
       setTeamStatuses(prev => ({
         ...prev,
-        [teamId]: { ...prev[teamId], isBlocked: statusRes.data.isBlocked, loading: false }
+        [teamId]: { ...prev[teamId], loading: false }
       }));
     } catch (err: any) {
       alert(err.response?.data?.message || 'Ошибка при изменении статуса блокировки');
@@ -329,40 +331,59 @@ const ClassRoom: React.FC = () => {
         setSelectedTask(null);
         setSelectedTaskForTeam(null);
         setTeamStatus(null);
+        // Update isCuratorJoined status immediately when leaving
+        setTeamStatuses(prev => ({
+          ...prev,
+          [teamId]: { 
+            ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, loading: false }),
+            isCuratorJoined: false,
+            loading: false
+          }
+        }));
       } else {
         await classSessionAPI.joinTeam(teamId);
         setCuratorJoinedTeamId(teamId);
-        // Load tasks and team status when joining
+        
+        // Update isCuratorJoined status immediately when joining
+        setTeamStatuses(prev => ({
+          ...prev,
+          [teamId]: { 
+            ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, loading: false }),
+            isCuratorJoined: true,
+            loading: false
+          }
+        }));
+        
+        // Load initial team status, curators and tasks when joining
         if (classId) {
           try {
+            // Load initial team status
+            const statusRes = await classSessionAPI.getTeamStatus(teamId);
+            setTeamStatus(statusRes.data);
+            
+            // Load joined curators
+            const curatorsRes = await classSessionAPI.getJoinedCurators(teamId);
+            setJoinedCurators(Array.isArray(curatorsRes.data) ? curatorsRes.data : []);
+            
+            // Load tasks
             const tasksRes = await classAPI.getTasks(parseInt(classId));
             const tasksData = Array.isArray(tasksRes.data) ? tasksRes.data : [];
             setTasks(tasksData);
             
-            const statusRes = await classSessionAPI.getTeamStatus(teamId);
-            setTeamStatus(statusRes.data);
-            
+            // Set selected task if there's one in status
             if (statusRes.data.selectedTaskId) {
               const task = tasksData.find((t: Task) => t.id === statusRes.data.selectedTaskId);
               if (task) {
                 setSelectedTaskForTeam(task);
-                setSelectedTask(task);
+                if (!selectedTask) {
+                  setSelectedTask(task);
+                }
               }
             }
           } catch (err: any) {
             console.error('Error loading team data after join:', err);
           }
         }
-      }
-      const joinedRes = await classSessionAPI.isCuratorJoined(teamId);
-      setTeamStatuses(prev => ({
-        ...prev,
-        [teamId]: { ...prev[teamId], isCuratorJoined: joinedRes.data.isJoined, loading: false }
-      }));
-      
-      // Reload joined curators for the team (if it's the student's team)
-      if (team && team.id === teamId) {
-        loadJoinedCurators(teamId);
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Ошибка при присоединении/отсоединении от команды');
@@ -371,54 +392,220 @@ const ClassRoom: React.FC = () => {
         [teamId]: { ...prev[teamId], loading: false }
       }));
     }
-  }, [teamStatuses, team, classId]);
+  }, [teamStatuses, classId]);
 
-  const loadJoinedCurators = useCallback(async (teamId: number) => {
-    try {
-      const res = await classSessionAPI.getJoinedCurators(teamId);
-      setJoinedCurators(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error('Error loading joined curators:', err);
-      setJoinedCurators([]);
-    }
-  }, []);
+  // loadJoinedCurators removed - curators list will be updated via WebSocket events
 
-  // Load joined curators and team status for student's team
-  useEffect(() => {
-    if (team && isStudent) {
-      const refreshTeamData = async () => {
-        try {
-          // Load team status to get selected task
-          const statusRes = await classSessionAPI.getTeamStatus(team.id);
-          setTeamStatus(statusRes.data);
-          
-          // Update selected task for team if it changed
-          if (statusRes.data.selectedTaskId) {
-            const task = tasks.find((t: Task) => t.id === statusRes.data.selectedTaskId);
-            if (task && task.id !== selectedTaskForTeam?.id) {
-              setSelectedTaskForTeam(task);
-            } else if (!task) {
-              // Task was selected but not found in tasks list - clear selection
-              setSelectedTaskForTeam(null);
-            }
-          } else if (selectedTaskForTeam) {
-            // If no task is selected, clear selection
-            setSelectedTaskForTeam(null);
-          }
-        } catch (err) {
-          console.error('Error refreshing team status:', err);
+  // Handle team events from WebSocket
+  const handleTeamEvent = useCallback((event: EventDTO) => {
+    if (!event.teamId) return;
+    
+    switch (event.type) {
+      case 'CURATOR_BLOCKED_TEAM':
+      case 'CURATOR_UNBLOCKED_TEAM':
+        // Update team status blocked state
+        if (event.teamId === team?.id) {
+          setTeamStatus(prev => prev ? { ...prev, isBlocked: event.type === 'CURATOR_BLOCKED_TEAM' } : null);
         }
+        // Update teamStatuses for curator view
+        setTeamStatuses(prev => ({
+          ...prev,
+          [event.teamId!]: {
+            ...(prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, loading: false }),
+            isBlocked: event.type === 'CURATOR_BLOCKED_TEAM',
+          }
+        }));
+        break;
         
-        // Load joined curators
-        loadJoinedCurators(team.id);
-      };
-      
-      refreshTeamData();
-      // Refresh every 5 seconds to get updates
-      const interval = setInterval(refreshTeamData, 5000);
-      return () => clearInterval(interval);
+      case 'TEAM_RAISED_HAND':
+      case 'TEAM_LOWERED_HAND':
+        // Update team status hand raised state
+        if (event.teamId === team?.id) {
+          setTeamStatus(prev => prev ? { ...prev, handRaised: event.type === 'TEAM_RAISED_HAND' } : null);
+        }
+        break;
+        
+      case 'TEAM_BEGAN_TO_COMPLETE_TASK':
+        // Update selected task
+        if (event.teamId === team?.id && event.taskId) {
+          const task = tasks.find((t: Task) => t.id === event.taskId);
+          if (task) {
+            setSelectedTaskForTeam(task);
+            setTeamStatus(prev => prev ? { ...prev, selectedTaskId: event.taskId } : null);
+          }
+        }
+        break;
+        
+      case 'CURATOR_JOINED_TEAM':
+        // Add curator to joined list
+        if (event.teamId === team?.id && event.userRoleId) {
+          setJoinedCurators(prev => {
+            if (!prev.includes(event.userRoleId!)) {
+              return [...prev, event.userRoleId!];
+            }
+            return prev;
+          });
+        }
+        // Update teamStatuses - check if current user is the curator who joined
+        if (event.userRoleId) {
+          // We need to check if this is the current curator - this will be handled by checking userRoleId
+          // For now, we'll update based on events, but curator's own status needs special handling
+          setTeamStatuses(prev => {
+            const currentStatus = prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, loading: false };
+            return {
+              ...prev,
+              [event.teamId!]: {
+                ...currentStatus,
+                // Note: isCuratorJoined for current user will be updated when we receive their own join event
+              }
+            };
+          });
+        }
+        break;
+        
+      case 'CURATOR_LEFT_TEAM':
+        // Remove curator from joined list
+        if (event.teamId === team?.id && event.userRoleId) {
+          setJoinedCurators(prev => prev.filter(id => id !== event.userRoleId));
+        }
+        // Update teamStatuses - check if current user is the curator who left
+        if (event.userRoleId) {
+          setTeamStatuses(prev => {
+            const currentStatus = prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, loading: false };
+            return {
+              ...prev,
+              [event.teamId!]: {
+                ...currentStatus,
+                // Note: isCuratorJoined for current user will be updated when we receive their own leave event
+              }
+            };
+          });
+        }
+        break;
     }
-  }, [team, isStudent, tasks, selectedTask, loadJoinedCurators]);
+  }, [team, tasks]);
+  
+  // Unified WebSocket connection for team events
+  useEffect(() => {
+    if (!user) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // Collect teams to subscribe to
+    const teamsToSubscribe: number[] = [];
+    if (team?.id) {
+      teamsToSubscribe.push(team.id);
+    }
+    if (isCurator && allTeams.length > 0) {
+      allTeams.forEach(teamItem => {
+        if (!teamsToSubscribe.includes(teamItem.teamId)) {
+          teamsToSubscribe.push(teamItem.teamId);
+        }
+      });
+    }
+    
+    if (teamsToSubscribe.length === 0) return;
+    
+    // Prevent multiple connection attempts
+    if (isConnectingRef.current) {
+      console.log('WebSocket connection already in progress, skipping...');
+      return;
+    }
+    
+    // Initialize WebSocket connection if not already connected
+    if (!stompClientRef.current || !stompClientRef.current.connected) {
+      isConnectingRef.current = true;
+      const socket = new SockJS('http://localhost:8181/ws');
+      const client = new Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 0,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        connectHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+        onConnect: () => {
+          console.log('WebSocket connected for team events');
+          isConnectingRef.current = false;
+          
+          // Subscribe to all relevant teams
+          teamsToSubscribe.forEach(teamId => {
+            if (!subscribedTeamIdsRef.current.has(teamId)) {
+              const topic = `/topic/team/${teamId}/events`;
+              client.subscribe(topic, (message: IMessage) => {
+                try {
+                  const event: EventDTO = JSON.parse(message.body);
+                  console.log('Received team event:', event);
+                  handleTeamEvent(event);
+                } catch (err) {
+                  console.error('Error parsing team event:', err);
+                }
+              });
+              subscribedTeamIdsRef.current.add(teamId);
+              console.log('Subscribed to team events:', topic);
+            }
+          });
+        },
+        onStompError: (frame) => {
+          console.error('STOMP error:', frame);
+          isConnectingRef.current = false;
+        },
+        onDisconnect: () => {
+          console.log('WebSocket disconnected');
+          isConnectingRef.current = false;
+        },
+        onWebSocketClose: () => {
+          console.log('WebSocket closed');
+          isConnectingRef.current = false;
+        },
+      });
+      
+      client.activate();
+      stompClientRef.current = client;
+    } else {
+      // Already connected, subscribe to new teams
+      teamsToSubscribe.forEach(teamId => {
+        if (!subscribedTeamIdsRef.current.has(teamId)) {
+          const topic = `/topic/team/${teamId}/events`;
+          stompClientRef.current?.subscribe(topic, (message: IMessage) => {
+            try {
+              const event: EventDTO = JSON.parse(message.body);
+              console.log('Received team event:', event);
+              handleTeamEvent(event);
+            } catch (err) {
+              console.error('Error parsing team event:', err);
+            }
+          });
+          subscribedTeamIdsRef.current.add(teamId);
+          console.log('Subscribed to team events:', topic);
+        }
+      });
+    }
+    
+    // Initial load of team status and curators (only for student's team)
+    if (team?.id && isStudent) {
+      // Initial status will be set via WebSocket events
+      // No need to load via API
+    }
+    
+    return () => {
+      // Don't cleanup on dependency changes, only on unmount
+      // Cleanup will be handled by component unmount
+    };
+  }, [team?.id, isCurator, allTeams, user, handleTeamEvent, isStudent, tasks]);
+  
+  // Cleanup WebSocket on component unmount
+  useEffect(() => {
+    return () => {
+      if (stompClientRef.current && stompClientRef.current.connected) {
+        console.log('Cleaning up WebSocket connection');
+        stompClientRef.current.deactivate().catch(() => {});
+        stompClientRef.current = null;
+        subscribedTeamIdsRef.current.clear();
+      }
+    };
+  }, []);
 
   // Check if curator is joined to any team on mount
   useEffect(() => {
@@ -427,6 +614,14 @@ const ClassRoom: React.FC = () => {
         for (const teamItem of allTeams) {
           try {
             const res = await classSessionAPI.isCuratorJoined(teamItem.teamId);
+            // Update teamStatuses to reflect current curator's join status
+            setTeamStatuses(prev => ({
+              ...prev,
+              [teamItem.teamId]: {
+                ...(prev[teamItem.teamId] || { isBlocked: false, isCuratorJoined: false, loading: false }),
+                isCuratorJoined: res.data.isJoined,
+              }
+            }));
             if (res.data.isJoined) {
               setCuratorJoinedTeamId(teamItem.teamId);
               break;
@@ -617,8 +812,7 @@ const ClassRoom: React.FC = () => {
                 onClick={async () => {
                   try {
                     await classSessionAPI.blockTeamSubmission(team.id, !teamStatus?.isBlocked);
-                    const statusRes = await classSessionAPI.getTeamStatus(team.id);
-                    setTeamStatus(statusRes.data);
+                    // Status will be updated via WebSocket event
                   } catch (err: any) {
                     alert(err.response?.data?.message || 'Ошибка');
                   }
@@ -654,6 +848,7 @@ const ClassRoom: React.FC = () => {
                 taskId={selectedTaskForTeam.id}
                 isElder={isElder || false}
                 isCurator={(isCurator && curatorJoinedTeamId !== null) || false}
+                onCodeChange={setElderCode}
               />
             ) : team && (isStudent || isElder) ? (
               <div className={styles.noTeamMessage}>
