@@ -330,6 +330,7 @@ const CuratorGroupClasses: React.FC = () => {
           ) : (
             classes.map(c => {
               const start = c.schedule ? combineDateAndTime(c.classDate, c.schedule.classStartTime) : null;
+              const end = c.schedule ? combineDateAndTime(c.classDate, c.schedule.classEndTime) : null;
               return (
                 <div
                   key={c.id}
@@ -343,6 +344,7 @@ const CuratorGroupClasses: React.FC = () => {
                   <div className={styles.requestDetails}>
                     <p><strong>Дата:</strong> {c.classDate}</p>
                     <p><strong>Начало:</strong> {start ? start.toLocaleString('ru-RU') : '—'}</p>
+                    <p><strong>Окончание:</strong> {end ? end.toLocaleString('ru-RU') : '—'}</p>
                   </div>
                   <div className={styles.requestActions}>
                     <button
@@ -377,8 +379,7 @@ const CuratorGroupClasses: React.FC = () => {
             {actionSuccess && <div className={styles.info}>{actionSuccess}</div>}
 
             <div className={styles.requestDetails}>
-              <p><strong>Статус:</strong> {lessonStatusText}</p>
-              <p><strong>Подключение:</strong></p>
+              <p><strong>{lessonStatusText}</strong></p>
               <button className={styles.button} onClick={connectToClass} disabled={!isStarted || isEnded}>
                 Подключиться к занятию
               </button>
