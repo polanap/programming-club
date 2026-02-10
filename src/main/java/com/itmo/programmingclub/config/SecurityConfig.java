@@ -52,6 +52,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // WebSocket SockJS endpoints - must be accessible without auth for initial handshake
+                        // SockJS uses /ws/info for info, and various transport endpoints (/ws/websocket, /ws/xhr, etc.)
+                        // The actual WebSocket/STOMP connection is authenticated via JWT token in headers
+                        .requestMatchers("/ws/**").permitAll()
                         // Manager endpoints
                         // .requestMatchers("/api/managers/**").hasRole("MANAGER")
                         // .requestMatchers("/api/groups/**").hasRole("MANAGER")

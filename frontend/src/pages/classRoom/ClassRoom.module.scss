@@ -61,8 +61,51 @@
 .content {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.curatorMainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-width: 0; /* Allow flex item to shrink below content size */
+}
+
+.eventLogSidebar {
+  width: 33.33%; /* Approximately one third of the page width */
+  border-left: 1px solid #ddd;
+  background-color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.taskSidebar {
+  width: 300px;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #fff;
+}
+
+.taskContent {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.teamsListContainer {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  
+  h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+  }
 }
 
 .taskHeader {
@@ -261,6 +304,12 @@
   h4 {
     margin: 0;
   }
+}
+
+.handRaisedIcon {
+  font-size: 20px;
+  margin-left: 10px;
+  cursor: default;
 }
 
 .blockedBadge {

@@ -1,11 +1,14 @@
 package com.itmo.programmingclub.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service for managing code editing sessions and line locks
@@ -17,8 +20,8 @@ public class CodeEditorService {
     // Map: teamId -> Map<lineNumber, LockInfo>
     private final Map<Integer, Map<Integer, LockInfo>> teamLocks = new ConcurrentHashMap<>();
     
-    // Map: teamId -> current code content
-    private final Map<Integer, String> teamCode = new ConcurrentHashMap<>();
+    // Map: teamId -> Map<userId, code> - code by user
+    private final Map<Integer, Map<String, String>> teamUserCode = new ConcurrentHashMap<>();
     
     // Map: teamId -> Set<userId> of connected users
     private final Map<Integer, Set<String>> teamConnections = new ConcurrentHashMap<>();
@@ -114,6 +117,23 @@ public class CodeEditorService {
     }
 
     /**
+     * Check if a user can override a lock (based on priority)
+     * @return true if user can override, false otherwise
+     */
+    public boolean canOverrideLock(Integer teamId, Integer lineNumber, String userId, String userRole) {
+        Map<Integer, LockInfo> locks = teamLocks.get(teamId);
+        if (locks != null) {
+            LockInfo lock = locks.get(lineNumber);
+            if (lock != null && !lock.getUserId().equals(userId)) {
+                int existingPriority = getRolePriority(lock.getUserRole());
+                int newPriority = getRolePriority(userRole);
+                return newPriority > existingPriority;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get lock information for a line
      */
     public LockInfo getLineLock(Integer teamId, Integer lineNumber) {
@@ -125,17 +145,51 @@ public class CodeEditorService {
     }
 
     /**
-     * Store code for a team
+     * Store code for a specific user in a team
      */
-    public void updateTeamCode(Integer teamId, String code) {
-        teamCode.put(teamId, code);
+    public void updateUserCode(Integer teamId, String userId, String code) {
+        Map<String, String> userCodes = teamUserCode.computeIfAbsent(teamId, k -> new ConcurrentHashMap<>());
+        userCodes.put(userId, code);
     }
 
     /**
-     * Get current code for a team
+     * Get code for a specific user in a team
      */
+    public String getUserCode(Integer teamId, String userId) {
+        Map<String, String> userCodes = teamUserCode.get(teamId);
+        if (userCodes != null) {
+            return userCodes.getOrDefault(userId, "");
+        }
+        return "";
+    }
+
+    /**
+     * Get all user codes for a team
+     */
+    public Map<String, String> getAllUserCodes(Integer teamId) {
+        return teamUserCode.getOrDefault(teamId, Collections.emptyMap());
+    }
+
+    /**
+     * Store code for a team (legacy method for backward compatibility)
+     */
+    @Deprecated
+    public void updateTeamCode(Integer teamId, String code) {
+        // For backward compatibility, store as empty userId
+        updateUserCode(teamId, "", code);
+    }
+
+    /**
+     * Get current code for a team (legacy method - returns first available code)
+     */
+    @Deprecated
     public String getTeamCode(Integer teamId) {
-        return teamCode.getOrDefault(teamId, "");
+        Map<String, String> userCodes = teamUserCode.get(teamId);
+        if (userCodes != null && !userCodes.isEmpty()) {
+            // Return first available code
+            return userCodes.values().iterator().next();
+        }
+        return "";
     }
 
     /**
@@ -154,7 +208,7 @@ public class CodeEditorService {
             users.remove(userId);
             if (users.isEmpty()) {
                 teamConnections.remove(teamId);
-                teamCode.remove(teamId);
+                teamUserCode.remove(teamId);
                 teamLocks.remove(teamId);
             }
         }
@@ -166,6 +220,26 @@ public class CodeEditorService {
      */
     public Set<String> getTeamConnections(Integer teamId) {
         return teamConnections.getOrDefault(teamId, Collections.emptySet());
+    }
+
+    /**
+     * Get code excluding lines locked by other users
+     * Used for syncing - preserves lines that are locked by the requesting user
+     */
+    public String getCodeExcludingLockedLines(Integer teamId, String requestingUserId) {
+        String fullCode = getTeamCode(teamId);
+        if (fullCode == null || fullCode.isEmpty()) {
+            return fullCode;
+        }
+        
+        Map<Integer, LockInfo> locks = teamLocks.get(teamId);
+        if (locks == null || locks.isEmpty()) {
+            return fullCode;
+        }
+        
+        // For now, return full code - client will handle preserving locked lines
+        // This could be optimized to exclude locked lines on server side if needed
+        return fullCode;
     }
 
     /**

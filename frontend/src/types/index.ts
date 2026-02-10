@@ -192,6 +192,18 @@ export interface CodeChangeMessage {
   content: string;
   position: number;
   userId: string;
+  userRole?: string;
+}
+
+export interface EventDTO {
+  id: number;
+  time: string;
+  type: string;
+  teamId: number | null;
+  userRoleId: number | null;
+  submissionId: number | null;
+  classId: number | null;
+  taskId: number | null;
 }
 
 export interface LockMessage {
