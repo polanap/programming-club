@@ -24,9 +24,10 @@ const ClassRoom: React.FC = () => {
   const [teamStatus, setTeamStatus] = useState<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null } | null>(null);
   const [joined, setJoined] = useState<boolean>(false);
   const [showEventLog, setShowEventLog] = useState<boolean>(false);
+  const [showEventLogSidebar, setShowEventLogSidebar] = useState<boolean>(true); // For curators
   const [allTeams, setAllTeams] = useState<TeamResponseDTO[]>([]);
   const [showTeamsModal, setShowTeamsModal] = useState<boolean>(false);
-  const [teamStatuses, setTeamStatuses] = useState<Record<number, { isBlocked: boolean; isCuratorJoined: boolean; loading: boolean }>>({});
+  const [teamStatuses, setTeamStatuses] = useState<Record<number, { isBlocked: boolean; isCuratorJoined: boolean; handRaised: boolean; loading: boolean }>>({});
   const [curatorJoinedTeamId, setCuratorJoinedTeamId] = useState<number | null>(null);
   const [joinedCurators, setJoinedCurators] = useState<number[]>([]);
   
@@ -173,11 +174,15 @@ const ClassRoom: React.FC = () => {
 
   // Load class data on mount (without auto-joining)
   // Note: Joining happens only when user clicks "Join Class" button in StudentGroupClasses/CuratorGroupClasses
+  // Managers can view classes without joining
   useEffect(() => {
     loadClassData();
     // Assume user is already joined if they reached this page (they clicked the button)
-    setJoined(true);
-  }, [loadClassData]);
+    // Managers don't need to join - they can view classes without joining
+    if (!isManager) {
+      setJoined(true);
+    }
+  }, [loadClassData, isManager]);
 
   // Cleanup: leave class on unmount (only if user was joined)
   useEffect(() => {
@@ -251,37 +256,54 @@ const ClassRoom: React.FC = () => {
   }, [classId, joined, isStudent, isCurator, navigate]);
 
   const loadTeamStatuses = useCallback(async () => {
-    // Load initial statuses for all teams - check if current curator is joined
+    // Load initial statuses for all teams - check if current curator is joined, blocked status, and hand raised status
     if (!isCurator || allTeams.length === 0) return;
     
     const statusPromises = allTeams.map(async (team) => {
       try {
-        const joinedRes = await classSessionAPI.isCuratorJoined(team.teamId);
+        // Load all statuses in parallel
+        const [joinedRes, teamStatusRes] = await Promise.all([
+          classSessionAPI.isCuratorJoined(team.teamId),
+          classSessionAPI.getTeamStatus(team.teamId)
+        ]);
         return {
           teamId: team.teamId,
           isCuratorJoined: joinedRes.data.isJoined,
+          isBlocked: teamStatusRes.data.isBlocked || false,
+          handRaised: teamStatusRes.data.handRaised || false,
         };
       } catch (err) {
-        console.error(`Error checking curator join status for team ${team.teamId}:`, err);
+        console.error(`Error loading status for team ${team.teamId}:`, err);
         return {
           teamId: team.teamId,
           isCuratorJoined: false,
+          isBlocked: false,
+          handRaised: false,
         };
       }
     });
     
     const statuses = await Promise.all(statusPromises);
-    const statusMap: Record<number, { isBlocked: boolean; isCuratorJoined: boolean; loading: boolean }> = {};
-    statuses.forEach(({ teamId, isCuratorJoined }) => {
+    const statusMap: Record<number, { isBlocked: boolean; isCuratorJoined: boolean; handRaised: boolean; loading: boolean }> = {};
+    statuses.forEach(({ teamId, isCuratorJoined, isBlocked, handRaised }) => {
       statusMap[teamId] = { 
-        isBlocked: false, 
+        isBlocked, 
         isCuratorJoined, 
+        handRaised,
         loading: false 
       };
     });
     setTeamStatuses(statusMap);
   }, [isCurator, allTeams]);
 
+  // Load team statuses when curator opens the teams list (not in modal, but in main interface)
+  useEffect(() => {
+    if (isCurator && !curatorJoinedTeamId && allTeams.length > 0) {
+      loadTeamStatuses();
+    }
+  }, [isCurator, curatorJoinedTeamId, allTeams.length, loadTeamStatuses]);
+  
+  // Also load when modal opens (for backward compatibility)
   useEffect(() => {
     if (showTeamsModal && isCurator) {
       loadTeamStatuses();
@@ -289,29 +311,40 @@ const ClassRoom: React.FC = () => {
   }, [showTeamsModal, isCurator, loadTeamStatuses]);
 
   const handleToggleTeamBlock = useCallback(async (teamId: number) => {
+    // Get current blocked status from teamStatuses or teamStatus
     const currentStatus = teamStatuses[teamId];
-    const newBlocked = !currentStatus?.isBlocked;
+    const currentBlocked = currentStatus?.isBlocked ?? teamStatus?.isBlocked ?? false;
+    const newBlocked = !currentBlocked;
     
     setTeamStatuses(prev => ({
       ...prev,
       [teamId]: { ...prev[teamId], loading: true }
     }));
     
+    // Optimistically update teamStatus if this is the curator's joined team
+    if (isCurator && curatorJoinedTeamId === teamId && teamStatus) {
+      setTeamStatus(prev => prev ? { ...prev, isBlocked: newBlocked } : null);
+    }
+    
     try {
       await classSessionAPI.blockTeamSubmission(teamId, newBlocked);
       // Status will be updated via WebSocket event
       setTeamStatuses(prev => ({
         ...prev,
-        [teamId]: { ...prev[teamId], loading: false }
+        [teamId]: { ...prev[teamId], loading: false, isBlocked: newBlocked }
       }));
     } catch (err: any) {
       alert(err.response?.data?.message || 'Ошибка при изменении статуса блокировки');
+      // Revert optimistic update on error
+      if (isCurator && curatorJoinedTeamId === teamId && teamStatus) {
+        setTeamStatus(prev => prev ? { ...prev, isBlocked: currentBlocked } : null);
+      }
       setTeamStatuses(prev => ({
         ...prev,
-        [teamId]: { ...prev[teamId], loading: false }
+        [teamId]: { ...prev[teamId], loading: false, isBlocked: currentBlocked }
       }));
     }
-  }, [teamStatuses]);
+  }, [teamStatuses, teamStatus, isCurator, curatorJoinedTeamId]);
 
   const handleToggleTeamJoin = useCallback(async (teamId: number) => {
     const currentStatus = teamStatuses[teamId];
@@ -332,27 +365,27 @@ const ClassRoom: React.FC = () => {
         setSelectedTaskForTeam(null);
         setTeamStatus(null);
         // Update isCuratorJoined status immediately when leaving
-        setTeamStatuses(prev => ({
-          ...prev,
-          [teamId]: { 
-            ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, loading: false }),
-            isCuratorJoined: false,
-            loading: false
-          }
-        }));
+            setTeamStatuses(prev => ({
+              ...prev,
+              [teamId]: { 
+                ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, handRaised: false, loading: false }),
+                isCuratorJoined: false,
+                loading: false
+              }
+            }));
       } else {
         await classSessionAPI.joinTeam(teamId);
         setCuratorJoinedTeamId(teamId);
         
         // Update isCuratorJoined status immediately when joining
-        setTeamStatuses(prev => ({
-          ...prev,
-          [teamId]: { 
-            ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, loading: false }),
-            isCuratorJoined: true,
-            loading: false
-          }
-        }));
+            setTeamStatuses(prev => ({
+              ...prev,
+              [teamId]: { 
+                ...(prev[teamId] || { isBlocked: false, isCuratorJoined: false, handRaised: false, loading: false }),
+                isCuratorJoined: true,
+                loading: false
+              }
+            }));
         
         // Load initial team status, curators and tasks when joining
         if (classId) {
@@ -403,15 +436,15 @@ const ClassRoom: React.FC = () => {
     switch (event.type) {
       case 'CURATOR_BLOCKED_TEAM':
       case 'CURATOR_UNBLOCKED_TEAM':
-        // Update team status blocked state
-        if (event.teamId === team?.id) {
+        // Update team status blocked state for student's team or curator's joined team
+        if (event.teamId === team?.id || event.teamId === curatorJoinedTeamId) {
           setTeamStatus(prev => prev ? { ...prev, isBlocked: event.type === 'CURATOR_BLOCKED_TEAM' } : null);
         }
         // Update teamStatuses for curator view
         setTeamStatuses(prev => ({
           ...prev,
           [event.teamId!]: {
-            ...(prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, loading: false }),
+            ...(prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, handRaised: false, loading: false }),
             isBlocked: event.type === 'CURATOR_BLOCKED_TEAM',
           }
         }));
@@ -423,16 +456,59 @@ const ClassRoom: React.FC = () => {
         if (event.teamId === team?.id) {
           setTeamStatus(prev => prev ? { ...prev, handRaised: event.type === 'TEAM_RAISED_HAND' } : null);
         }
+        // Update teamStatuses for curator view
+        setTeamStatuses(prev => ({
+          ...prev,
+          [event.teamId!]: {
+            ...(prev[event.teamId!] || { isBlocked: false, isCuratorJoined: false, handRaised: false, loading: false }),
+            handRaised: event.type === 'TEAM_RAISED_HAND',
+          }
+        }));
         break;
         
       case 'TEAM_BEGAN_TO_COMPLETE_TASK':
-        // Update selected task
-        if (event.teamId === team?.id && event.taskId) {
-          const task = tasks.find((t: Task) => t.id === event.taskId);
-          if (task) {
+        // Update selected task for student's team or curator's joined team
+        const isRelevantTeam = (event.teamId === team?.id) || (event.teamId === curatorJoinedTeamId);
+        console.log('TEAM_BEGAN_TO_COMPLETE_TASK event:', { 
+          eventTeamId: event.teamId, 
+          teamId: team?.id, 
+          curatorJoinedTeamId, 
+          isRelevantTeam,
+          taskId: event.taskId,
+          tasksCount: tasks.length
+        });
+        if (isRelevantTeam && event.taskId) {
+          // Try to find task in current tasks list
+          let task = tasks.find((t: Task) => t.id === event.taskId);
+          
+          // If task not found and we have classId, try to load it
+          if (!task && classId) {
+            console.log('Task not found in current tasks, loading from API...');
+            classAPI.getTasks(parseInt(classId)).then(res => {
+              const allTasks = Array.isArray(res.data) ? res.data : [];
+              setTasks(allTasks);
+              const foundTask = allTasks.find((t: Task) => t.id === event.taskId);
+              if (foundTask) {
+                console.log('Task found after loading:', foundTask);
+                setSelectedTaskForTeam(foundTask);
+                setSelectedTask(foundTask); // Also set as viewed task
+                setTeamStatus(prev => prev ? { ...prev, selectedTaskId: event.taskId } : null);
+              } else {
+                console.warn('Task not found after loading from API:', event.taskId);
+              }
+            }).catch(err => {
+              console.error('Error loading tasks for selected task:', err);
+            });
+          } else if (task) {
+            console.log('Task found in current tasks:', task);
             setSelectedTaskForTeam(task);
+            setSelectedTask(task); // Also set as viewed task
             setTeamStatus(prev => prev ? { ...prev, selectedTaskId: event.taskId } : null);
+          } else {
+            console.warn('Task not found and no classId to load from:', { taskId: event.taskId, classId });
           }
+        } else {
+          console.log('Event not relevant for current user:', { isRelevantTeam, eventTeamId: event.teamId });
         }
         break;
         
@@ -483,7 +559,7 @@ const ClassRoom: React.FC = () => {
         }
         break;
     }
-  }, [team, tasks]);
+  }, [team, tasks, curatorJoinedTeamId, classId]);
   
   // Unified WebSocket connection for team events
   useEffect(() => {
@@ -665,25 +741,23 @@ const ClassRoom: React.FC = () => {
         {error && <div className={styles.error}>{error}</div>}
         
         <div className={styles.topControls}>
-          {(isCurator || isManager) && classId && (
-            <>
-              <button
-                className={styles.eventLogButton}
-                onClick={() => setShowEventLog(true)}
-              >
-                Посмотреть лог событий
-              </button>
-              {isCurator && (
-                <button
-                  className={styles.teamsButton}
-                  onClick={() => setShowTeamsModal(true)}
-                >
-                  Разбиение на команды
-                </button>
-              )}
-            </>
+          {isManager && classId && (
+            <button
+              className={styles.eventLogButton}
+              onClick={() => setShowEventLog(true)}
+            >
+              Посмотреть лог событий
+            </button>
           )}
-          {joined && (
+          {isCurator && classId && (
+            <button
+              className={styles.eventLogButton}
+              onClick={() => setShowEventLogSidebar(!showEventLogSidebar)}
+            >
+              {showEventLogSidebar ? 'Скрыть лог событий' : 'Показать лог событий'}
+            </button>
+          )}
+          {joined && !isManager && (
             <button
               className={styles.leaveButton}
               onClick={handleLeaveClass}
@@ -691,177 +765,189 @@ const ClassRoom: React.FC = () => {
               Отключиться от занятия
             </button>
           )}
+          {isCurator && curatorJoinedTeamId && (
+            <button
+              className={styles.leaveButton}
+              onClick={() => handleToggleTeamJoin(curatorJoinedTeamId)}
+            >
+              Отключиться от команды
+            </button>
+          )}
           {isElder && (
             <HandRaiseButton teamId={team.id} />
           )}
         </div>
 
-        {showEventLog && classId && (
+        {/* Modal for managers only */}
+        {showEventLog && classId && isManager && !isCurator && (
           <EventLog
             classId={parseInt(classId)}
             onClose={() => setShowEventLog(false)}
           />
         )}
-
-        {showTeamsModal && isCurator && (
-          <div className={styles.modal}>
-            <div className={styles.modalContent}>
-              <h3>Разбиение на команды</h3>
-              <div className={styles.teamsList}>
+        
+        <div className={styles.mainContent}>
+          {/* Left content: Teams list for curators (if not joined), or team interface (if joined/student) */}
+          <div className={isCurator ? styles.curatorMainContent : styles.content}>
+            {isCurator && !curatorJoinedTeamId ? (
+              /* Teams list for curator */
+              <div className={styles.teamsListContainer}>
+                <h2>Команды</h2>
                 {allTeams.length === 0 ? (
                   <p>Команд нет</p>
                 ) : (
-                  allTeams.map(team => {
-                    const status = teamStatuses[team.teamId] || { isBlocked: false, isCuratorJoined: false, loading: false };
-                    return (
-                      <div key={team.teamId} className={styles.teamCard}>
-                        <div className={styles.teamHeader}>
-                          <h4>Команда #{team.teamId}</h4>
-                          {status.isBlocked && (
-                            <span className={styles.blockedBadge}>Заблокирована</span>
-                          )}
-                          {status.isCuratorJoined && (
-                            <span className={styles.joinedBadge}>Вы присоединены</span>
-                          )}
+                  <div className={styles.teamsList}>
+                    {allTeams.map(teamItem => {
+                      const status = teamStatuses[teamItem.teamId] || { isBlocked: false, isCuratorJoined: false, handRaised: false, loading: false };
+                      return (
+                        <div key={teamItem.teamId} className={styles.teamCard}>
+                          <div className={styles.teamHeader}>
+                            <h4>Команда #{teamItem.teamId}</h4>
+                            {status.handRaised && (
+                              <span className={styles.handRaisedIcon} title="Рука поднята">✋</span>
+                            )}
+                            {status.isBlocked && (
+                              <span className={styles.blockedBadge}>Заблокирована</span>
+                            )}
+                            {status.isCuratorJoined && (
+                              <span className={styles.joinedBadge}>Вы присоединены</span>
+                            )}
+                          </div>
+                          <div className={styles.teamDetails}>
+                            <p><strong>Староста:</strong> {teamItem.elder?.fullName || '—'}</p>
+                            <p><strong>Участники:</strong></p>
+                            {teamItem.members?.length ? (
+                              <ul>
+                                {teamItem.members.map(m => (
+                                  <li key={m.userRoleId}>{m.fullName} (@{m.username})</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p>—</p>
+                            )}
+                          </div>
+                          <div className={styles.teamActions}>
+                            <button
+                              className={status.isCuratorJoined ? styles.buttonSecondary : styles.button}
+                              onClick={() => handleToggleTeamJoin(teamItem.teamId)}
+                              disabled={status.loading}
+                            >
+                              {status.loading ? 'Загрузка...' : (status.isCuratorJoined ? 'Отсоединиться от команды' : 'Присоединиться к команде')}
+                            </button>
+                            <button
+                              className={status.isBlocked ? styles.button : styles.buttonDanger}
+                              onClick={() => handleToggleTeamBlock(teamItem.teamId)}
+                              disabled={status.loading}
+                            >
+                              {status.loading ? 'Загрузка...' : (status.isBlocked ? 'Разблокировать отправку' : 'Заблокировать отправку')}
+                            </button>
+                          </div>
                         </div>
-                        <div className={styles.teamDetails}>
-                          <p><strong>Староста:</strong> {team.elder?.fullName || '—'}</p>
-                          <p><strong>Участники:</strong></p>
-                          {team.members?.length ? (
-                            <ul>
-                              {team.members.map(m => (
-                                <li key={m.userRoleId}>{m.fullName} (@{m.username})</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p>—</p>
-                          )}
-                        </div>
-                        <div className={styles.teamActions}>
-                          <button
-                            className={status.isBlocked ? styles.button : styles.buttonDanger}
-                            onClick={() => handleToggleTeamBlock(team.teamId)}
-                            disabled={status.loading}
-                          >
-                            {status.loading ? 'Загрузка...' : (status.isBlocked ? 'Разблокировать отправку' : 'Заблокировать отправку')}
-                          </button>
-                          <button
-                            className={status.isCuratorJoined ? styles.buttonSecondary : styles.button}
-                            onClick={() => handleToggleTeamJoin(team.teamId)}
-                            disabled={status.loading}
-                          >
-                            {status.loading ? 'Загрузка...' : (status.isCuratorJoined ? 'Отсоединиться от команды' : 'Присоединиться к команде')}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-              <div className={styles.modalActions}>
-                <button className={styles.buttonSecondary} onClick={() => setShowTeamsModal(false)}>Закрыть</button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className={styles.mainContent}>
-          <div className={styles.sidebar}>
-          {/* Show TaskList for students or curators joined to a team */}
-          {(team || (isCurator && curatorJoinedTeamId)) && (
-            <TaskList
-              tasks={tasks}
-              selectedTask={selectedTask}
-              selectedTaskForTeam={selectedTaskForTeam}
-              isElder={isElder || false}
-              onSelectTask={handleSelectTask}
-              onSelectTaskForTeam={handleSelectTaskForTeam}
-            />
-          )}
-          {team && (
-            <>
-              {joinedCurators.length > 0 && (
-                <div className={styles.curatorJoinedNotification}>
-                  <strong>К команде присоединился куратор</strong>
-                  <p>Куратор может помочь с решением задачи</p>
-                </div>
-              )}
-              {isElder && (
-                <>
-              {selectedTaskForTeam && teamStatus && !teamStatus.isBlocked && (
-                <button 
-                  className={styles.submitButton}
-                  onClick={handleSubmitSolution}
-                >
-                  Отправить решение
-                </button>
-              )}
-                  {teamStatus?.isBlocked && (
-                    <div className={styles.blockedWarning}>
-                      Куратор временно заблокировал вам отправку решений
+            ) : (
+              /* Team interface for students or curators joined to a team */
+              <>
+                {/* Task sidebar for students or curators joined to a team */}
+                <div className={styles.taskSidebar}>
+                  {(team || (isCurator && curatorJoinedTeamId)) && (
+                    <TaskList
+                      tasks={tasks}
+                      selectedTask={selectedTask}
+                      selectedTaskForTeam={selectedTaskForTeam}
+                      isElder={isElder || false}
+                      onSelectTask={handleSelectTask}
+                      onSelectTaskForTeam={handleSelectTaskForTeam}
+                    />
+                  )}
+                  {team && (
+                    <>
+                      {joinedCurators.length > 0 && (
+                        <div className={styles.curatorJoinedNotification}>
+                          <strong>К команде присоединился куратор</strong>
+                          <p>Куратор может помочь с решением задачи</p>
+                        </div>
+                      )}
+                      {isElder && (
+                        <>
+                          {selectedTaskForTeam && teamStatus && !teamStatus.isBlocked && (
+                            <button 
+                              className={styles.submitButton}
+                              onClick={handleSubmitSolution}
+                            >
+                              Отправить решение
+                            </button>
+                          )}
+                          {teamStatus?.isBlocked && (
+                            <div className={styles.blockedWarning}>
+                              Куратор временно заблокировал вам отправку решений
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                  {isCurator && curatorJoinedTeamId && teamStatus && (
+                    <div className={styles.curatorControls}>
+                      <h4>Управление командой</h4>
+                      <button
+                        onClick={() => handleToggleTeamBlock(curatorJoinedTeamId)}
+                        disabled={!curatorJoinedTeamId}
+                      >
+                        {teamStatus?.isBlocked ? 'Разблокировать' : 'Заблокировать'} отправку
+                      </button>
                     </div>
                   )}
-                </>
-              )}
-            </>
-          )}
-          {isCurator && team && (
-            <div className={styles.curatorControls}>
-              <h4>Управление командой</h4>
-              <button
-                onClick={async () => {
-                  try {
-                    await classSessionAPI.blockTeamSubmission(team.id, !teamStatus?.isBlocked);
-                    // Status will be updated via WebSocket event
-                  } catch (err: any) {
-                    alert(err.response?.data?.message || 'Ошибка');
-                  }
-                }}
-              >
-                {teamStatus?.isBlocked ? 'Разблокировать' : 'Заблокировать'} отправку
-              </button>
-            </div>
-          )}
-        </div>
-        <div className={styles.content}>
-          {selectedTask ? (
-            <div className={styles.taskHeader}>
-              <h2>Задача #{selectedTask.id}</h2>
-              <p className={styles.taskCondition}>{selectedTask.condition}</p>
-              {selectedTaskForTeam && selectedTaskForTeam.id === selectedTask.id && (
-                <div className={styles.selectedForTeamBadge}>
-                  ✓ Выбрана для решения
                 </div>
-              )}
-            </div>
-          ) : (team || (isCurator && curatorJoinedTeamId)) && (isStudent || isElder || isCurator) ? (
-            <div className={styles.taskHeader}>
-              <p className={styles.noTaskMessage}>Выберите задачу из списка, чтобы посмотреть её условие</p>
-            </div>
-          ) : null}
-          <div className={styles.editorContainer}>
-            {/* Show CodeEditor for student's team or for curator's joined team */}
-            {/* CodeEditor uses selectedTaskForTeam (task selected by elder), not selectedTask (viewed task) */}
-            {(team || (isCurator && curatorJoinedTeamId)) && selectedTaskForTeam ? (
-              <CodeEditor
-                teamId={team?.id || curatorJoinedTeamId || 0}
-                taskId={selectedTaskForTeam.id}
-                isElder={isElder || false}
-                isCurator={(isCurator && curatorJoinedTeamId !== null) || false}
-                onCodeChange={setElderCode}
-              />
-            ) : team && (isStudent || isElder) ? (
-              <div className={styles.noTeamMessage}>
-                Староста еще не выбрал задачу для решения
-              </div>
-            ) : null}
-            {!team && !curatorJoinedTeamId && (
-              <div className={styles.noTeamMessage}>
-                {isCurator ? 'Присоединитесь к команде, чтобы видеть интерфейс ввода решения' : 'Вы не состоите в команде'}
-              </div>
+                
+                {/* Main content area */}
+                <div className={styles.taskContent}>
+                  {selectedTask ? (
+                    <div className={styles.taskHeader}>
+                      <h2>Задача #{selectedTask.id}</h2>
+                      <p className={styles.taskCondition}>{selectedTask.condition}</p>
+                      {selectedTaskForTeam && selectedTaskForTeam.id === selectedTask.id && (
+                        <div className={styles.selectedForTeamBadge}>
+                          ✓ Выбрана для решения
+                        </div>
+                      )}
+                    </div>
+                  ) : (team || (isCurator && curatorJoinedTeamId)) && (isStudent || isElder || isCurator) ? (
+                    <div className={styles.taskHeader}>
+                      <p className={styles.noTaskMessage}>Выберите задачу из списка, чтобы посмотреть её условие</p>
+                    </div>
+                  ) : null}
+                  <div className={styles.editorContainer}>
+                    {/* Show CodeEditor for student's team or for curator's joined team */}
+                    {/* CodeEditor uses selectedTaskForTeam (task selected by elder), not selectedTask (viewed task) */}
+                    {(team || (isCurator && curatorJoinedTeamId)) && selectedTaskForTeam ? (
+                      <CodeEditor
+                        teamId={team?.id || curatorJoinedTeamId || 0}
+                        taskId={selectedTaskForTeam.id}
+                        isElder={isElder || false}
+                        isCurator={(isCurator && curatorJoinedTeamId !== null) || false}
+                        onCodeChange={setElderCode}
+                      />
+                    ) : team && (isStudent || isElder) ? (
+                      <div className={styles.noTeamMessage}>
+                        Староста еще не выбрал задачу для решения
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </>
             )}
           </div>
-        </div>
+          
+          {/* Right sidebar: EventLog for curators */}
+          {isCurator && classId && showEventLogSidebar && (
+            <div className={styles.eventLogSidebar}>
+              <EventLog classId={parseInt(classId)} inline={true} />
+            </div>
+          )}
         </div>
       </div>
     </div>
