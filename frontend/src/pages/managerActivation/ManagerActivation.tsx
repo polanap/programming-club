@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { managerAPI } from '../../services/api';
 import Header from '../../components/header/Header';
 import { InactiveManager, PageResponse } from '../../types';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './ManagerActivation.module.scss';
 import '../../App.css';
 
@@ -13,6 +14,7 @@ const ManagerActivation: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(0);
   const [totalElements, setTotalElements] = useState<number>(0);
   const pageSize = 10;
+  const { showAlert, AlertComponent } = useAlert();
 
   const formatDate = useCallback((dateString: string | undefined): string => {
     if (!dateString) return '-';
@@ -57,7 +59,7 @@ const ManagerActivation: React.FC = () => {
       // Reload the current page
       loadManagers();
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка активации менеджера');
+      showAlert(err.response?.data?.errorMessage || 'Ошибка активации менеджера', 'error');
       console.error('Error activating manager:', err);
     }
   }, [loadManagers]);
@@ -79,6 +81,7 @@ const ManagerActivation: React.FC = () => {
 
   return (
     <div>
+      {AlertComponent}
       <Header />
       <div className={`container ${styles.container}`}>
         <h2>Активация менеджеров</h2>

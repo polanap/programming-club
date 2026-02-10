@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/header/Header';
 import { taskAPI, classAPI, groupAPI, testAPI } from '../../services/api';
 import { Task, Class, Group, Test } from '../../types';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './TaskManagement.module.scss';
 
 const TaskManagement: React.FC = () => {
@@ -26,6 +27,7 @@ const TaskManagement: React.FC = () => {
   const [newTask, setNewTask] = useState({ condition: '', isOpen: true });
   const [newTest, setNewTest] = useState({ input: '', output: '' });
   const navigate = useNavigate();
+  const { showAlert, AlertComponent } = useAlert();
 
   useEffect(() => {
     loadData();
@@ -74,7 +76,7 @@ const TaskManagement: React.FC = () => {
       setNewTask({ condition: '', isOpen: true });
       loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при создании задания');
+      showAlert(error.response?.data?.message || 'Ошибка при создании задания', 'error');
     }
   };
 
@@ -89,7 +91,7 @@ const TaskManagement: React.FC = () => {
       setEditingTask(null);
       loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при обновлении задания');
+      showAlert(error.response?.data?.message || 'Ошибка при обновлении задания', 'error');
     }
   };
 
@@ -99,24 +101,24 @@ const TaskManagement: React.FC = () => {
       await taskAPI.delete(taskId);
       loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при удалении задания');
+      showAlert(error.response?.data?.message || 'Ошибка при удалении задания', 'error');
     }
   };
 
   const handleAssignTask = async (taskId: number) => {
     if (!selectedClass) {
-      alert('Выберите класс');
+      showAlert('Выберите класс', 'warning');
       return;
     }
     try {
       await classAPI.assignTask(selectedClass, taskId);
       setShowAssignModal(false);
-      alert('Задание успешно привязано к классу');
+      showAlert('Задание успешно привязано к классу', 'success');
       if (selectedGroup) {
         loadClasses(selectedGroup);
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при привязке задания');
+      showAlert(error.response?.data?.message || 'Ошибка при привязке задания', 'error');
     }
   };
 
@@ -128,7 +130,7 @@ const TaskManagement: React.FC = () => {
         loadClasses(selectedGroup);
       }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при отвязке задания');
+      showAlert(error.response?.data?.message || 'Ошибка при отвязке задания', 'error');
     }
   };
 
@@ -155,7 +157,7 @@ const TaskManagement: React.FC = () => {
       setNewTest({ input: '', output: '' });
       await loadTests(editingTask.id);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при создании теста');
+      showAlert(error.response?.data?.message || 'Ошибка при создании теста', 'error');
     }
   };
 
@@ -170,7 +172,7 @@ const TaskManagement: React.FC = () => {
       setEditingTest(null);
       await loadTests(editingTask.id);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при обновлении теста');
+      showAlert(error.response?.data?.message || 'Ошибка при обновлении теста', 'error');
     }
   };
 
@@ -181,7 +183,7 @@ const TaskManagement: React.FC = () => {
       await testAPI.delete(testId);
       await loadTests(editingTask.id);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при удалении теста');
+      showAlert(error.response?.data?.message || 'Ошибка при удалении теста', 'error');
     }
   };
 
@@ -196,6 +198,7 @@ const TaskManagement: React.FC = () => {
 
   return (
     <div>
+      {AlertComponent}
       <Header />
       <div className={styles.container}>
         <div className={styles.header}>

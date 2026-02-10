@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { classSessionAPI } from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './HandRaiseButton.module.scss';
 
 interface HandRaiseButtonProps {
@@ -9,6 +10,7 @@ interface HandRaiseButtonProps {
 const HandRaiseButton: React.FC<HandRaiseButtonProps> = ({ teamId }) => {
   const [handRaised, setHandRaised] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const { showAlert, AlertComponent } = useAlert();
 
   // Load current hand status
   useEffect(() => {
@@ -32,7 +34,7 @@ const HandRaiseButton: React.FC<HandRaiseButtonProps> = ({ teamId }) => {
       setHandRaised(res.data.handRaised);
     } catch (error: any) {
       console.error('Error toggling hand:', error);
-      alert(error.response?.data?.message || 'Ошибка при изменении состояния руки');
+      showAlert(error.response?.data?.message || 'Ошибка при изменении состояния руки', 'error');
     } finally {
       setLoading(false);
     }
@@ -40,6 +42,7 @@ const HandRaiseButton: React.FC<HandRaiseButtonProps> = ({ teamId }) => {
 
   return (
     <div className={styles.container}>
+      {AlertComponent}
       <button
         onClick={handleToggle}
         disabled={loading}

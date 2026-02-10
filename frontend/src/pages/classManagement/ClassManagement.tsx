@@ -3,6 +3,7 @@ import Header from '../../components/header/Header';
 import EventLog from '../../components/eventLog/EventLog';
 import { classAPI, taskAPI } from '../../services/api';
 import { Class, Task } from '../../types';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './ClassManagement.module.scss';
 
 const ClassManagement: React.FC = () => {
@@ -14,6 +15,7 @@ const ClassManagement: React.FC = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [showEventLog, setShowEventLog] = useState<boolean>(false);
   const [eventLogClassId, setEventLogClassId] = useState<number | null>(null);
+  const { showAlert, AlertComponent } = useAlert();
 
   useEffect(() => {
     loadData();
@@ -65,16 +67,16 @@ const ClassManagement: React.FC = () => {
 
   const handleAssignTask = async () => {
     if (!selectedClass || !selectedTaskId) {
-      alert('Выберите задание');
+      showAlert('Выберите задание', 'warning');
       return;
     }
     try {
       await classAPI.assignTask(selectedClass.id, selectedTaskId);
       setSelectedTaskId(null);
       await loadClassDetails();
-      alert('Задание успешно привязано к классу');
+      showAlert('Задание успешно привязано к классу', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при привязке задания');
+      showAlert(error.response?.data?.message || 'Ошибка при привязке задания', 'error');
     }
   };
 
@@ -85,7 +87,7 @@ const ClassManagement: React.FC = () => {
       await classAPI.removeTask(selectedClass.id, taskId);
       await loadClassDetails();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Ошибка при отвязке задания');
+      showAlert(error.response?.data?.message || 'Ошибка при отвязке задания', 'error');
     }
   };
 
@@ -100,6 +102,7 @@ const ClassManagement: React.FC = () => {
 
   return (
     <div>
+      {AlertComponent}
       <Header />
       <div className={styles.container}>
         <div className={styles.header}>
