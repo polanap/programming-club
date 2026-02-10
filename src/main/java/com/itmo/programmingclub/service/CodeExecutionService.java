@@ -47,12 +47,11 @@ public class CodeExecutionService {
         String sourceCode = submission.getCode();
         String language = submission.getLanguage();
 
-        log.info("Starting Piston execution for submission {}", submissionId);
+        log.info("Starting Piston execution for submission {}, language: {}", submissionId, language);
         Instant start = Instant.now();
 
         try {
-            Runtime runtime = piston.getRuntime(language)
-                    .orElseThrow(() -> new IllegalArgumentException("Language not found: " + language));
+            Runtime runtime = findRuntimeForLanguage(language);
 
             if (tests.isEmpty()) {
                 log.warn("Task {} has no tests. Marking as OK.", task.getId());
@@ -130,5 +129,33 @@ public class CodeExecutionService {
             case "python", "py" -> "main.py";
             default -> "code.txt";
         };
+    }
+    
+    /**
+     * Finds a Runtime for the given language by trying multiple possible names.
+     * Piston API uses specific language identifiers that may differ from our internal representation.
+     */
+    private Runtime findRuntimeForLanguage(String language) {
+        if (language == null || language.trim().isEmpty()) {
+            language = "java";
+        }
+        String normalized = language.toLowerCase().trim();
+        
+        String[] possibleNames = switch (normalized) {
+            case "java" -> new String[]{"java", "java-17", "openjdk", "openjdk-17"};
+            case "python", "py" -> new String[]{"python3", "python", "python-3"};
+            default -> new String[]{normalized};
+        };
+        
+        for (String name : possibleNames) {
+            java.util.Optional<Runtime> runtimeOpt = piston.getRuntime(name);
+            if (runtimeOpt.isPresent()) {
+                log.debug("Found Piston runtime '{}' for language '{}'", name, language);
+                return runtimeOpt.get();
+            }
+        }
+        
+        throw new IllegalArgumentException("Language not found in Piston API: " + language + 
+                " (tried: " + String.join(", ", possibleNames) + ")");
     }
 }
