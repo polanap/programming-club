@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/header/Header';
 import EventLog from '../../components/eventLog/EventLog';
-import { classAPI, scheduleAPI, teamAPI, teamChangeRequestAPI, classSessionAPI } from '../../services/api';
-import { ClassResponseDTO, Schedule, TeamResponseDTO, TeamChangeRequest } from '../../types';
+import { classAPI, scheduleAPI, teamAPI, teamChangeRequestAPI, classSessionAPI, taskAPI } from '../../services/api';
+import { ClassResponseDTO, Schedule, TeamResponseDTO, TeamChangeRequest, Task } from '../../types';
 import styles from '../transferRequest/TransferRequest.module.scss';
 
 type ClassWithSchedule = ClassResponseDTO & { schedule?: Schedule };
@@ -55,9 +55,16 @@ const CuratorGroupClasses: React.FC = () => {
 
   const [showTeamsModal, setShowTeamsModal] = useState<boolean>(false);
   const [showTeamChangeRequestsModal, setShowTeamChangeRequestsModal] = useState<boolean>(false);
+  const [showTasksModal, setShowTasksModal] = useState<boolean>(false);
   const [showEventLog, setShowEventLog] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string>('');
   const [actionSuccess, setActionSuccess] = useState<string>('');
+
+  // tasks management for selected class
+  const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [classWithTasks, setClassWithTasks] = useState<ClassResponseDTO | null>(null);
+  const [loadingTasks, setLoadingTasks] = useState<boolean>(false);
 
   useEffect(() => {
     if (!showLessonMenu) return;
@@ -178,16 +185,71 @@ const CuratorGroupClasses: React.FC = () => {
     }
   };
 
+  const loadClassDetails = async (classId: number) => {
+    try {
+      const res = await classAPI.getById(classId);
+      setClassWithTasks(res.data);
+    } catch (error) {
+      console.error('Error loading class details:', error);
+    }
+  };
+
+  const loadAvailableTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      const res = await taskAPI.getAvailableForCurator();
+      setAvailableTasks(res.data || []);
+    } catch (error) {
+      console.error('Error loading available tasks:', error);
+      setAvailableTasks([]);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const handleAssignTask = async () => {
+    if (!selectedClass?.id || !selectedTaskId) {
+      setActionError('Выберите задание');
+      return;
+    }
+    try {
+      setActionError('');
+      await classAPI.assignTask(selectedClass.id, selectedTaskId);
+      setSelectedTaskId(null);
+      await loadClassDetails(selectedClass.id);
+      setActionSuccess('Задание успешно привязано к занятию');
+    } catch (error: any) {
+      setActionError(error.response?.data?.message || 'Ошибка при привязке задания');
+    }
+  };
+
+  const handleRemoveTask = async (taskId: number) => {
+    if (!selectedClass?.id) return;
+    if (!window.confirm('Вы уверены, что хотите отвязать это задание от занятия?')) return;
+    try {
+      setActionError('');
+      await classAPI.removeTask(selectedClass.id, taskId);
+      await loadClassDetails(selectedClass.id);
+      setActionSuccess('Задание успешно отвязано от занятия');
+    } catch (error: any) {
+      setActionError(error.response?.data?.message || 'Ошибка при отвязке задания');
+    }
+  };
+
   const openLessonMenu = async (c: ClassWithSchedule) => {
     setSelectedClass(c);
     setShowLessonMenu(true);
     setActionError('');
     setActionSuccess('');
     setTeams([]);
+    setClassWithTasks(null);
+    setSelectedTaskId(null);
     if (c?.id) {
       await Promise.all([
         loadTeamsForClass(c.id),
         loadTeamChangeRequestsForClass(c.id),
+        loadClassDetails(c.id),
+        loadAvailableTasks(),
       ]);
     }
   };
@@ -331,9 +393,21 @@ const CuratorGroupClasses: React.FC = () => {
               </button>
               <button
                 className={styles.buttonSecondary}
+                onClick={() => setShowEventLog(true)}
+              >
+                Посмотреть лог событий
+              </button>
+              <button
+                className={styles.buttonSecondary}
                 onClick={() => setShowTeamChangeRequestsModal(true)}
               >
                 Посмотреть заявки на смену команды ({teamChangeRequests.length})
+              </button>
+              <button
+                className={styles.buttonSecondary}
+                onClick={() => setShowTasksModal(true)}
+              >
+                Управление заданиями ({classWithTasks?.tasks?.length || 0})
               </button>
             </div>
 
@@ -346,8 +420,13 @@ const CuratorGroupClasses: React.FC = () => {
                   setSelectedClass(null);
                   setShowTeamsModal(false);
                   setShowTeamChangeRequestsModal(false);
+                  setShowTasksModal(false);
+                  setShowEventLog(false);
                   setActionError('');
                   setActionSuccess('');
+                  setClassWithTasks(null);
+                  setSelectedTaskId(null);
+                  setAvailableTasks([]);
                 }}
               >
                 Закрыть
@@ -475,12 +554,96 @@ const CuratorGroupClasses: React.FC = () => {
         </div>
       )}
 
+      {showTasksModal && selectedClass && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <h3>Управление заданиями для занятия #{selectedClass.id}</h3>
+
+            {actionError && <div className={styles.error}>{actionError}</div>}
+            {actionSuccess && <div className={styles.info}>{actionSuccess}</div>}
+
+            <div className={styles.requestDetails}>
+              <h4>Привязанные задания ({classWithTasks?.tasks?.length || 0}):</h4>
+              {loadingTasks ? (
+                <div className={styles.loading}>Загрузка заданий...</div>
+              ) : classWithTasks?.tasks && classWithTasks.tasks.length > 0 ? (
+                <div className={styles.requestsList} style={{ marginBottom: 15 }}>
+                  {classWithTasks.tasks.map((task) => (
+                    <div key={task.id} className={styles.requestCard}>
+                      <div className={styles.requestHeader}>
+                        <h4>Задание #{task.id}</h4>
+                      </div>
+                      <div className={styles.requestDetails}>
+                        <p>{task.condition}</p>
+                      </div>
+                      <div className={styles.requestActions}>
+                        <button
+                          className={styles.buttonDanger}
+                          onClick={() => handleRemoveTask(task.id)}
+                        >
+                          Отвязать
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: '#6c757d', marginBottom: 15 }}>Нет привязанных заданий</p>
+              )}
+
+              <div style={{ marginTop: 20, paddingTop: 15, borderTop: '1px solid #dee2e6' }}>
+                <h4>Добавить задание:</h4>
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ display: 'block', marginBottom: '5px' }}>Выберите задание:</label>
+                  <select
+                    value={selectedTaskId || ''}
+                    onChange={(e) => setSelectedTaskId(Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      border: '1px solid #ced4da'
+                    }}
+                  >
+                    <option value="">Выберите задание</option>
+                    {availableTasks
+                      .filter(
+                        (task) =>
+                          !classWithTasks?.tasks?.some((t) => t.id === task.id)
+                      )
+                      .map((task) => (
+                        <option key={task.id} value={task.id}>
+                          Задание #{task.id}: {task.condition.substring(0, 60)}
+                          {task.condition.length > 60 ? '...' : ''}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                {selectedTaskId && (
+                  <button
+                    className={styles.button}
+                    onClick={handleAssignTask}
+                  >
+                    Привязать задание
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button className={styles.buttonSecondary} onClick={() => setShowTasksModal(false)}>
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showEventLog && selectedClass && (
         <EventLog
           classId={selectedClass.id}
           onClose={() => {
             setShowEventLog(false);
-            setSelectedClass(null);
           }}
         />
       )}
