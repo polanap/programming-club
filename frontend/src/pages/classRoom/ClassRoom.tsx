@@ -20,7 +20,7 @@ const ClassRoom: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedTaskForTeam, setSelectedTaskForTeam] = useState<Task | null>(null); 
   const [elderCode, setElderCode] = useState<string>(''); 
-  const [submissionLanguage, setSubmissionLanguage] = useState<string>('python'); // Default to python
+  const [submissionLanguage, setSubmissionLanguage] = useState<string>('java'); // Default to java
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [teamStatus, setTeamStatus] = useState<{ isBlocked: boolean; handRaised: boolean; selectedTaskId: number | null } | null>(null);

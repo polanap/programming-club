@@ -111,7 +111,7 @@ public class ClassSessionController {
                                                       @RequestBody(required = false) Map<String, String> requestBody,
                                                       @AuthenticationPrincipal UserDetails userDetails) {
         String solution = requestBody != null ? requestBody.get("solution") : null;
-        String language = requestBody != null ? requestBody.get("language") : "python"; // Default to python
+        String language = requestBody != null ? requestBody.get("language") : "java";
         Submission submission = classSessionService.submitSolution(teamId, taskId, solution, language, userDetails.getUsername());
         return ResponseEntity.ok(SubmissionDTO.fromEntity(submission));
     }
