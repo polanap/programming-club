@@ -1,5 +1,7 @@
 package com.itmo.programmingclub.service;
 
+import com.itmo.programmingclub.exceptions.NotFoundException;
+import com.itmo.programmingclub.model.dto.SubmissionDTO;
 import com.itmo.programmingclub.model.entity.Submission;
 import com.itmo.programmingclub.repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,4 +45,3 @@ public class SubmissionService {
         return submissionRepository.save(submission);
     }
 }
-

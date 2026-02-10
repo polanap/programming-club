@@ -41,6 +41,12 @@ public class Submission {
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
     private Set<Event> events;
 
+    @Column(name = "code", columnDefinition = "TEXT")
+    private String code;
+
+    @Column(name = "language", length = 50)
+    private String language;
+
     public enum SubmissionStatus {
         NEW,
         OK,

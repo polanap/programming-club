@@ -22,6 +22,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -34,6 +35,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     implementation("io.jsonwebtoken:jjwt-impl:0.12.3")
     implementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
+    implementation("com.github.the-codeboy:Piston4J:1.0")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")

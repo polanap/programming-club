@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.itmo.programmingclub.model.dto.SubmissionDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -316,6 +317,8 @@ public class ClassSessionService {
         submission.setTeam(team);
         submission.setTask(task);
         submission.setStatus(Submission.SubmissionStatus.NEW);
+        submission.setCode(solution);
+        submission.setLanguage("python");
         submission.setComplitionTime(java.time.Duration.ofMinutes(0)); // Should be calculated properly
         
         Submission savedSubmission = submissionService.createSubmission(submission);
@@ -333,6 +336,12 @@ public class ClassSessionService {
         log.info("Team {} submitted solution for task {} by elder {}", teamId, taskId, username);
         
         return savedSubmission;
+    }
+
+    public SubmissionDTO getSubmissionDetails(Integer submissionId) {
+        Submission submission = submissionService.findById(submissionId)
+                .orElseThrow(() -> new NotFoundException("Submission not found"));
+        return SubmissionDTO.fromEntity(submission);
     }
 
     /**
