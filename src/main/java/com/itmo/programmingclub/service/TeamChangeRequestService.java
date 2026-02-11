@@ -94,6 +94,19 @@ public class TeamChangeRequestService {
             throw new IllegalStateException("Request is already processed");
         }
 
+        // Проверяем, что студент до сих пор находится в команде, из которой он изначально отправлял заявку
+        UserTeam currentMembership = userTeamRepository.findTopByUserRole_IdOrderByTeam_IdDesc(request.getStudent().getId())
+                .orElse(null);
+
+        if (currentMembership == null || !currentMembership.getTeam().getId().equals(request.getFromTeam().getId())) {
+            request.setStatus(TeamChangeRequest.RequestStatus.REJECTED);
+            request.setClosingTime(OffsetDateTime.now());
+            request.setComment("Auto-rejected: Student has already moved to another team");
+            teamChangeRequestRepository.save(request);
+
+            throw new IllegalStateException("Request is outdated: Student is no longer in the source team.");
+        }
+
         UserRole curatorRole = getUserRole(curatorUsername, "CURATOR");
 
         request.setStatus(approved ? TeamChangeRequest.RequestStatus.APPROVED : TeamChangeRequest.RequestStatus.REJECTED);
@@ -112,6 +125,9 @@ public class TeamChangeRequestService {
             userTeamRepository.deleteById(oldId);
         }
 
+        // Отклоняем все остальные заявки на смену команды
+        cancelOtherPendingRequests(studentRole.getId());
+
         // Отклоняем реквесты, когда студент перешёл в другую группу
         elderChangeRequestService.cancelRequestsForStudent(studentRole.getId());
 
@@ -122,12 +138,39 @@ public class TeamChangeRequestService {
 
         userTeamRepository.save(newMembership);
 
+        // Логика для старой команды (обновляем старосту, если он ушел)
         if (fromTeam.getElder() != null && fromTeam.getElder().getId().equals(studentRole.getUser().getId())) {
             var remainingMembers = userTeamRepository.findByTeamId(fromTeam.getId());
             if (!remainingMembers.isEmpty()) {
                 fromTeam.setElder(remainingMembers.get(0).getUserRole().getUser());
                 teamRepository.save(fromTeam);
             }
+        }
+
+        // Логика для новой команды (назначаем ученика старостой в новой команде, если до этого команда была пустая)
+        List<UserTeam> newTeamMembers = userTeamRepository.findByTeamId(toTeam.getId());
+
+        boolean isElderPresentInTeam = false;
+        if (toTeam.getElder() != null) {
+            isElderPresentInTeam = newTeamMembers.stream()
+                    .anyMatch(m -> m.getUserRole().getUser().getId().equals(toTeam.getElder().getId()));
+        }
+
+        if (newTeamMembers.size() == 1 || toTeam.getElder() == null || !isElderPresentInTeam) {
+            toTeam.setElder(studentRole.getUser());
+            teamRepository.save(toTeam);
+        }
+    }
+
+    private void cancelOtherPendingRequests(Integer studentId) {
+        List<TeamChangeRequest> pendingRequests = teamChangeRequestRepository
+                .findByStudentIdAndStatus(studentId, TeamChangeRequest.RequestStatus.NEW);
+
+        for (TeamChangeRequest req : pendingRequests) {
+            req.setStatus(TeamChangeRequest.RequestStatus.REJECTED);
+            req.setClosingTime(OffsetDateTime.now());
+            req.setComment("Auto-rejected: Student transferred to another team");
+            teamChangeRequestRepository.save(req);
         }
     }
 

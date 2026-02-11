@@ -15,5 +15,6 @@ public interface TeamChangeRequestRepository extends JpaRepository<TeamChangeReq
     List<TeamChangeRequest> findByStatus(TeamChangeRequest.RequestStatus status);
     @Query("SELECT tcr FROM TeamChangeRequest tcr WHERE tcr.fromTeam.classEntity.id = :classId OR tcr.toTeam.classEntity.id = :classId")
     List<TeamChangeRequest> findByClassId(@Param("classId") Integer classId);
+    List<TeamChangeRequest> findByStudentIdAndStatus(Integer studentId, TeamChangeRequest.RequestStatus status);
 }
 
