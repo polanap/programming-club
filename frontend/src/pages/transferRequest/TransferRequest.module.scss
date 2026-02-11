@@ -339,6 +339,9 @@
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 
   h3 {
     margin-top: 0;
@@ -350,7 +353,12 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 20px;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  z-index: 10;
 }
 
 .checkboxList {

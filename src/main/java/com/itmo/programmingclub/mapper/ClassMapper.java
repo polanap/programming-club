@@ -2,10 +2,12 @@ package com.itmo.programmingclub.mapper;
 
 import com.itmo.programmingclub.model.dto.ClassResponseDTO;
 import com.itmo.programmingclub.model.entity.Class;
+import com.itmo.programmingclub.model.entity.Task;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Component
@@ -22,7 +24,10 @@ public class ClassMapper {
                 .scheduleId(classEntity.getSchedule() != null ? classEntity.getSchedule().getId() : null)
                 .classDate(classEntity.getClassDate())
                 .tasks(classEntity.getTasks() != null ?
-                        classEntity.getTasks().stream().map(taskMapper::toDto).collect(Collectors.toList()) :
+                        classEntity.getTasks().stream()
+                                .sorted(Comparator.comparing(Task::getId))
+                                .map(taskMapper::toDto)
+                                .collect(Collectors.toList()) :
                         Collections.emptyList())
                 .build();
     }

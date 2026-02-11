@@ -10,6 +10,7 @@ import EventLog from '../../components/eventLog/EventLog';
 import SubmissionList from '../../components/submissionList/SubmissionList';
 import { classAPI, taskAPI, teamAPI, classSessionAPI } from '../../services/api';
 import { Class, Task, Team, TeamResponseDTO, AuthUser, RoleEnum, EventDTO } from '../../types';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './ClassRoom.module.scss';
 
 const ClassRoom: React.FC = () => {
@@ -33,6 +34,7 @@ const ClassRoom: React.FC = () => {
   const [teamStatuses, setTeamStatuses] = useState<Record<number, { isBlocked: boolean; isCuratorJoined: boolean; handRaised: boolean; loading: boolean }>>({});
   const [curatorJoinedTeamId, setCuratorJoinedTeamId] = useState<number | null>(null);
   const [joinedCurators, setJoinedCurators] = useState<number[]>([]);
+  const { showAlert, AlertComponent } = useAlert();
   
   // WebSocket connection for team events
   const stompClientRef = useRef<Client | null>(null);
@@ -262,7 +264,7 @@ const ClassRoom: React.FC = () => {
       setSelectedTask(task);
     } catch (err: any) {
       console.error('Error selecting task:', err);
-      alert(err.response?.data?.message || 'Ошибка при выборе задачи');
+      showAlert(err.response?.data?.message || 'Ошибка при выборе задачи', 'error');
     }
   }, [team, user?.id]);
 
@@ -272,10 +274,10 @@ const ClassRoom: React.FC = () => {
     try {
       // Get solution from elder's code area
       await classSessionAPI.submitSolution(team.id, selectedTaskForTeam.id, elderCode, submissionLanguage);
-      alert('Решение отправлено на проверку');
+      showAlert('Решение отправлено на проверку', 'success');
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Ошибка при отправке решения';
-      alert(errorMsg);
+      showAlert(errorMsg, 'error');
     }
   }, [team, selectedTaskForTeam, elderCode, submissionLanguage]);
 
@@ -292,7 +294,7 @@ const ClassRoom: React.FC = () => {
       navigate(-1);
     } catch (err: any) {
       const errorMsg = err.response?.data?.message || 'Ошибка при отключении от занятия';
-      alert(errorMsg);
+      showAlert(errorMsg, 'error');
     }
   }, [classId, joined, isStudent, isCurator, navigate]);
 
@@ -375,7 +377,7 @@ const ClassRoom: React.FC = () => {
         [teamId]: { ...prev[teamId], loading: false, isBlocked: newBlocked }
       }));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Ошибка при изменении статуса блокировки');
+      showAlert(err.response?.data?.message || 'Ошибка при изменении статуса блокировки', 'error');
       // Revert optimistic update on error
       if (isCurator && curatorJoinedTeamId === teamId && teamStatus) {
         setTeamStatus(prev => prev ? { ...prev, isBlocked: currentBlocked } : null);
@@ -460,7 +462,7 @@ const ClassRoom: React.FC = () => {
         }
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Ошибка при присоединении/отсоединении от команды');
+      showAlert(err.response?.data?.message || 'Ошибка при присоединении/отсоединении от команды', 'error');
       setTeamStatuses(prev => ({
         ...prev,
         [teamId]: { ...prev[teamId], loading: false }
@@ -777,6 +779,7 @@ const ClassRoom: React.FC = () => {
 
   return (
     <div>
+      {AlertComponent}
       <Header />
       <div className={styles.container}>
         {error && <div className={styles.error}>{error}</div>}

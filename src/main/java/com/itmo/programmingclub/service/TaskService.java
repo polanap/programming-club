@@ -52,7 +52,7 @@ public class TaskService {
     }
 
     public List<Task> findAvailableTasksForCurator(Integer curatorId) {
-        return taskRepository.findByAuthorIdOrIsOpenTrue(curatorId, true);
+        return taskRepository.findByAuthorIdOrIsOpenTrueOrderByIdDesc(curatorId, true);
     }
 
     public Task updateTask(Integer taskId, TaskDTO taskDTO, String username) {

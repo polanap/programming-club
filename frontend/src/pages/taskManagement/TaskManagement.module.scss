@@ -186,6 +186,8 @@
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  flex-direction: column;
+  position: relative;
 }
 
 .modalContent h3 {
@@ -258,7 +260,12 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 20px;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  z-index: 10;
 }
 
 .modalActions button {
@@ -312,7 +319,6 @@
 
 .testsList {
   margin: 20px 0;
-  max-height: 400px;
   overflow-y: auto;
 }
 

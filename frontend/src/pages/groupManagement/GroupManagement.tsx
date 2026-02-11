@@ -4,6 +4,7 @@ import Header from '../../components/header/Header';
 import UsersTable from '../../components/userTable/UsersTable';
 import { groupAPI, userAPI, scheduleAPI } from '../../services/api';
 import { Group, GroupResponse, User, UserType, GroupUsers, UsersByType, DayOfWeek, CreateScheduleRequest, Schedule } from '../../types';
+import { useAlert } from '../../hooks/useAlert';
 import styles from './GroupManagement.module.scss';
 import '../../App.css';
 
@@ -33,6 +34,7 @@ const GroupManagement: React.FC = () => {
   const [users, setUsers] = useState<UsersByType>({ students: [], curators: [], managers: [] });
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const navigate = useNavigate();
+  const { showAlert, AlertComponent } = useAlert();
 
   const loadData = useCallback(async () => {
     try {
@@ -113,9 +115,9 @@ const GroupManagement: React.FC = () => {
       const response = await groupAPI.createGroup();
       await loadData();
       setSelectedGroup(response.data);
-      alert('Группа успешно создана');
+      showAlert('Группа успешно создана', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка создания группы');
+      showAlert(err.response?.data?.errorMessage || 'Ошибка создания группы', 'error');
       console.error('Error creating group:', err);
     }
   }, [loadData]);
@@ -136,9 +138,9 @@ const GroupManagement: React.FC = () => {
       setShowAddUserModal(false);
       setSelectedUserId('');
       setSelectedUserType(null);
-      alert('Пользователь успешно добавлен');
+      showAlert('Пользователь успешно добавлен', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка добавления пользователя');
+      showAlert(err.response?.data?.errorMessage || 'Ошибка добавления пользователя', 'error');
       console.error('Error adding user:', err);
     }
   }, [selectedUserId, selectedUserType, selectedGroup, loadGroupDetails, loadGroupUsers]);
@@ -160,9 +162,9 @@ const GroupManagement: React.FC = () => {
       }
       await loadGroupDetails(selectedGroup.id);
       await loadGroupUsers(selectedGroup.id);
-      alert('Пользователь успешно удален');
+      showAlert('Пользователь успешно удален', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка удаления пользователя');
+      showAlert(err.response?.data?.errorMessage || 'Ошибка удаления пользователя', 'error');
       console.error('Error removing user:', err);
     }
   }, [selectedGroup, loadGroupDetails, loadGroupUsers]);
@@ -183,10 +185,10 @@ const GroupManagement: React.FC = () => {
       setScheduleDayOfWeek(DayOfWeek.MONDAY);
       setScheduleStartTime('');
       setScheduleEndTime('');
-      alert('Расписание успешно создано');
+      showAlert('Расписание успешно создано', 'success');
     } catch (err: any) {
       const errorMessage = err.response?.data?.errorMessage || err.response?.data?.message || 'Ошибка создания расписания';
-      alert(errorMessage);
+      showAlert(errorMessage, 'error');
       console.error('Error creating schedule:', err);
     }
   }, [scheduleStartTime, scheduleEndTime, scheduleDayOfWeek, selectedGroup, loadGroupDetails, loadGroupSchedules]);
@@ -202,10 +204,10 @@ const GroupManagement: React.FC = () => {
       await groupAPI.deleteSchedule(selectedGroup.id, scheduleId);
       await loadGroupSchedules(selectedGroup.id);
       await loadGroupDetails(selectedGroup.id);
-      alert('Расписание успешно удалено');
+      showAlert('Расписание успешно удалено', 'success');
     } catch (err: any) {
       const errorMessage = err.response?.data?.errorMessage || err.response?.data?.message || 'Ошибка удаления расписания';
-      alert(errorMessage);
+      showAlert(errorMessage, 'error');
       console.error('Error deleting schedule:', err);
     }
   }, [selectedGroup, loadGroupSchedules, loadGroupDetails]);
@@ -221,9 +223,9 @@ const GroupManagement: React.FC = () => {
       await groupAPI.startGroup(selectedGroup.id);
       await loadGroupDetails(selectedGroup.id);
       await loadData();
-      alert('Группа успешно запущена');
+      showAlert('Группа успешно запущена', 'success');
     } catch (err: any) {
-      alert(err.response?.data?.errorMessage || 'Ошибка запуска группы');
+      showAlert(err.response?.data?.errorMessage || 'Ошибка запуска группы', 'error');
       console.error('Error starting group:', err);
     }
   }, [selectedGroup, loadGroupDetails, loadData]);
@@ -313,6 +315,7 @@ const GroupManagement: React.FC = () => {
 
   return (
     <div>
+      {AlertComponent}
       <Header />
       <div className={`container ${styles.container}`}>
         <div className={styles.header}>
